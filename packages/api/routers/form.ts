@@ -212,12 +212,8 @@ export const formRouter = createTRPCRouter({
       }),
     ),
 
-  hasReturningUrl: publicProcedure
-    .input(
-      z.object({
-        formId: z.string(),
-      }),
-    )
+  getReturnUrl: publicProcedure
+    .input(z.object({ formId: z.string() }))
     .query(async ({ ctx, input }) => {
       const form = await ctx.db.query.forms.findFirst({
         where: (table) => eq(table.id, input.formId),

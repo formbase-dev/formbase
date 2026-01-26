@@ -10,7 +10,7 @@ export default async function FormCompletedPage({
   params: Promise<{ formId: string }>;
 }) {
   const { formId } = await params;
-  const form = await api.form.hasReturningUrl({ formId });
+  const form = await api.form.getReturnUrl({ formId });
 
   if (!form) {
     return (
