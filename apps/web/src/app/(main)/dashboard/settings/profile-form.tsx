@@ -33,15 +33,17 @@ const profileFormSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
+type ProfileFormUser = Omit<User, 'name'> & { name: string | null };
+
 type ProfileFormProps = {
-  user: User;
+  user: ProfileFormUser;
 };
 
 export function ProfileForm({ user }: ProfileFormProps) {
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      name: user.name,
+      name: user.name ?? '',
       email: user.email,
     },
     mode: 'onChange',

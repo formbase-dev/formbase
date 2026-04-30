@@ -8,10 +8,12 @@ import { hashApiKey } from '../lib/api-key';
 const { and, eq, gt, isNull, or } = drizzlePrimitives;
 
 type Database = typeof database;
+type AfterResponse = (task: () => Promise<void> | void) => void;
 
 export async function validateApiKey(
   authorization: string | null | undefined,
   db: Database,
+  afterResponse?: AfterResponse,
 ) {
   if (!authorization?.startsWith('Bearer ')) {
     return null;
@@ -30,11 +32,19 @@ export async function validateApiKey(
   });
 
   if (apiKey) {
-    void db
-      .update(apiKeys)
-      .set({ lastUsedAt: new Date() })
-      .where(eq(apiKeys.id, apiKey.id))
-      .catch(() => undefined);
+    const updateLastUsedAt = async () => {
+      await db
+        .update(apiKeys)
+        .set({ lastUsedAt: new Date() })
+        .where(eq(apiKeys.id, apiKey.id))
+        .catch(() => undefined);
+    };
+
+    if (afterResponse) {
+      afterResponse(updateLastUsedAt);
+    } else {
+      void updateLastUsedAt();
+    }
   }
 
   return apiKey;

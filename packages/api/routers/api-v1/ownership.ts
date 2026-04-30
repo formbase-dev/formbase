@@ -2,25 +2,15 @@ import type { db as database } from '@formbase/db';
 
 import { TRPCError } from '@trpc/server';
 
-import { drizzlePrimitives } from '@formbase/db';
-
-const { and, eq } = drizzlePrimitives;
+import {
+  assertFormDataOwnership,
+  assertFormOwnership,
+} from '../form-ownership';
 
 type DbContext = { db: typeof database; user: { id: string } };
 
 export async function assertApiFormOwnership(ctx: DbContext, formId: string) {
-  const form = await ctx.db.query.forms.findFirst({
-    where: (table) => and(eq(table.id, formId), eq(table.userId, ctx.user.id)),
-  });
-
-  if (!form) {
-    throw new TRPCError({
-      code: 'NOT_FOUND',
-      message: 'Form not found',
-    });
-  }
-
-  return form;
+  return assertFormOwnership(ctx, formId, 'Form not found');
 }
 
 export async function assertApiSubmissionOwnership(
@@ -28,13 +18,13 @@ export async function assertApiSubmissionOwnership(
   formId: string,
   submissionId: string,
 ) {
-  await assertApiFormOwnership(ctx, formId);
+  const submission = await assertFormDataOwnership(
+    ctx,
+    submissionId,
+    'Submission not found',
+  );
 
-  const submission = await ctx.db.query.formDatas.findFirst({
-    where: (table) => and(eq(table.id, submissionId), eq(table.formId, formId)),
-  });
-
-  if (!submission) {
+  if (submission.formId !== formId) {
     throw new TRPCError({
       code: 'NOT_FOUND',
       message: 'Submission not found',

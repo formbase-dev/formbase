@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { after, NextResponse } from 'next/server';
 
 import type { ApiV1Context } from '@formbase/api/routers/api-v1';
 import type { NextRequest } from 'next/server';
@@ -38,8 +38,10 @@ async function transformErrorResponse(response: Response): Promise<Response> {
 
     if (response.status === 429) {
       const match = /Retry after (\d+) seconds/.exec(message);
-      if (match) {
-        headers.set('Retry-After', match[1]);
+      const retryAfterSeconds = match?.[1];
+
+      if (retryAfterSeconds) {
+        headers.set('Retry-After', retryAfterSeconds);
       }
     }
 
@@ -60,7 +62,10 @@ const handler = async (req: NextRequest) => {
     endpoint: '/api/v1',
     router: apiV1Router,
     createContext: () => {
-      ctx = createApiV1Context({ headers: req.headers });
+      ctx = createApiV1Context({
+        headers: req.headers,
+        afterResponse: after,
+      });
       return ctx;
     },
     req,
@@ -81,22 +86,25 @@ const handler = async (req: NextRequest) => {
 
   const responseTime = Date.now() - startTime;
   const typedCtx = ctx as ApiV1Context | null;
+  const apiKey = typedCtx?.apiKey;
 
-  if (typedCtx?.apiKey) {
+  if (apiKey) {
     const ipAddress =
       req.headers.get('x-forwarded-for') ?? req.headers.get('x-real-ip');
     const userAgent = req.headers.get('user-agent');
 
-    void logApiRequest(db, {
-      apiKeyId: typedCtx.apiKey.id,
-      userId: typedCtx.apiKey.userId,
-      method: req.method,
-      path: new URL(req.url).pathname,
-      statusCode: response.status,
-      ...(ipAddress ? { ipAddress } : {}),
-      ...(userAgent ? { userAgent } : {}),
-      responseTimeMs: responseTime,
-    }).catch(() => undefined);
+    after(async () => {
+      await logApiRequest(db, {
+        apiKeyId: apiKey.id,
+        userId: apiKey.userId,
+        method: req.method,
+        path: new URL(req.url).pathname,
+        statusCode: response.status,
+        ...(ipAddress ? { ipAddress } : {}),
+        ...(userAgent ? { userAgent } : {}),
+        responseTimeMs: responseTime,
+      }).catch(() => undefined);
+    });
   }
 
   return transformErrorResponse(response);

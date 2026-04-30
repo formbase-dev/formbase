@@ -9,9 +9,12 @@ import { db } from '@formbase/db';
 import { validateApiKey } from '../../middleware/api-auth';
 import { checkRateLimit } from '../../middleware/rate-limit';
 
+type AfterResponse = (task: () => Promise<void> | void) => void;
+
 export interface ApiV1Context {
   db: typeof db;
   headers: Headers;
+  afterResponse?: AfterResponse;
   apiKey?: {
     id: string;
     userId: string;
@@ -25,10 +28,12 @@ export interface ApiV1Context {
 
 export const createApiV1Context = (opts: {
   headers: Headers;
+  afterResponse?: AfterResponse;
 }): ApiV1Context => {
   return {
     db,
     headers: opts.headers,
+    ...(opts.afterResponse ? { afterResponse: opts.afterResponse } : {}),
   };
 };
 
@@ -56,7 +61,11 @@ export const publicApiProcedure = t.procedure;
 
 export const apiKeyProcedure = t.procedure.use(async ({ ctx, next }) => {
   const authorization = ctx.headers.get('authorization');
-  const apiKey = await validateApiKey(authorization, ctx.db);
+  const apiKey = await validateApiKey(
+    authorization,
+    ctx.db,
+    ctx.afterResponse,
+  );
 
   if (!apiKey) {
     throw new TRPCError({
@@ -74,14 +83,21 @@ export const apiKeyProcedure = t.procedure.use(async ({ ctx, next }) => {
     });
   }
 
+  const apiKeyCtx = {
+    id: apiKey.id,
+    userId: apiKey.userId,
+    user: apiKey.user,
+  };
+
+  ctx.apiKey = apiKeyCtx;
+  ctx.user = apiKey.user;
+  ctx.rateLimitRemaining = rateLimit.remaining;
+  ctx.rateLimitReset = rateLimit.resetAt.getTime();
+
   return next({
     ctx: {
       ...ctx,
-      apiKey: {
-        id: apiKey.id,
-        userId: apiKey.userId,
-        user: apiKey.user,
-      },
+      apiKey: apiKeyCtx,
       user: apiKey.user,
       rateLimitRemaining: rateLimit.remaining,
       rateLimitReset: rateLimit.resetAt.getTime(),
