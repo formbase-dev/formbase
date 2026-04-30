@@ -30,10 +30,11 @@ export async function validateApiKey(
   });
 
   if (apiKey) {
-    await db
+    void db
       .update(apiKeys)
       .set({ lastUsedAt: new Date() })
-      .where(eq(apiKeys.id, apiKey.id));
+      .where(eq(apiKeys.id, apiKey.id))
+      .catch(() => undefined);
   }
 
   return apiKey;

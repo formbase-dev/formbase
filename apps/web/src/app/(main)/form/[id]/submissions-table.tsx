@@ -45,25 +45,10 @@ import { formatFileName } from '@formbase/utils';
 
 import { api } from '~/lib/trpc/react';
 
+import { formatSubmissionValue } from './format-submission-value';
 import { ImagePreviewDialog } from './image-preview-dialog';
 
 type Submission = RouterOutputs['formData']['all'][number];
-
-const formatTableValue = (value: unknown): string => {
-  if (value === null || value === undefined) {
-    return '';
-  }
-
-  if (typeof value === 'string') {
-    return value;
-  }
-
-  if (typeof value === 'number' || typeof value === 'boolean') {
-    return String(value);
-  }
-
-  return JSON.stringify(value);
-};
 
 type SubmissionsTableProps = {
   formKeys: string[];
@@ -234,7 +219,7 @@ export function SubmissionsTable({
 
           const value = data[submission];
 
-          return <div>{formatTableValue(value)}</div>;
+          return <div>{formatSubmissionValue(value)}</div>;
         },
       };
     }),

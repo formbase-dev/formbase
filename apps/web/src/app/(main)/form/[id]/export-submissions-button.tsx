@@ -14,27 +14,13 @@ import {
   DropdownMenuTrigger,
 } from '@formbase/ui/primitives/dropdown-menu';
 
+import { formatSubmissionValue } from './format-submission-value';
+
 type ExportSubmissionsDropDownButtonProps = {
   submissions: Array<RouterOutputs['formData']['all'][number]>;
   formKeys: string[];
   formTitle: string;
   honeypotField: string;
-};
-
-const formatExportValue = (value: unknown): string => {
-  if (value === null || value === undefined) {
-    return '';
-  }
-
-  if (typeof value === 'string') {
-    return value;
-  }
-
-  if (typeof value === 'number' || typeof value === 'boolean') {
-    return String(value);
-  }
-
-  return JSON.stringify(value);
 };
 
 const createCSVContent = (
@@ -52,7 +38,7 @@ const createCSVContent = (
   submissions.forEach((submission) => {
     if (submission.data && typeof submission.data === 'object') {
       const dataValues = filteredKeys.map((key) =>
-        formatExportValue(submission.data?.[key]),
+        formatSubmissionValue(submission.data?.[key]),
       );
       const row = [...dataValues, String(submission.isSpam)].join(',');
       csvContent += row + '\n';
