@@ -66,7 +66,7 @@ export const UserDropdown = ({ className }: { className?: string }) => {
             variant="ghost"
             className={`h-auto p-0 hover:bg-transparent ${className ?? ''}`}
           >
-            <UserAvatar src={user.image ?? null} seed={user.email ?? user.id} />
+            <UserAvatar src={user.image ?? null} seed={user.email} />
             <ChevronDownIcon
               aria-hidden="true"
               className="opacity-60"
@@ -78,7 +78,7 @@ export const UserDropdown = ({ className }: { className?: string }) => {
           <DropdownMenuGroup>
             <DropdownMenuLabel className="flex min-w-0 flex-col">
               <span className="truncate text-sm font-medium text-foreground">
-                {user.name ?? 'User'}
+                {user.name}
               </span>
               <span className="truncate text-xs font-normal text-muted-foreground">
                 {user.email}
@@ -155,7 +155,11 @@ export const UserDropdown = ({ className }: { className?: string }) => {
             </DropdownMenuPortal>
           </DropdownMenuSub>
           <DropdownMenuSeparator />
-          <SignoutMenuItem onClick={() => setSignoutDialogOpen(true)} />
+          <SignoutMenuItem
+            onClick={() => {
+              setSignoutDialogOpen(true);
+            }}
+          />
         </DropdownMenuContent>
       </DropdownMenu>
       <SignoutDialog

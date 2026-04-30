@@ -1,5 +1,3 @@
-import Link from 'next/link';
-
 import { Button } from '@formbase/ui/primitives/button';
 
 import { api } from '~/lib/trpc/server';
@@ -11,17 +9,6 @@ export default async function FormCompletedPage({
 }) {
   const { formId } = await params;
   const form = await api.form.getReturnUrl({ formId });
-
-  if (!form) {
-    return (
-      <div className="container flex h-screen flex-col items-center justify-center gap-3">
-        <h2 className="text-xl font-medium">Form not found</h2>
-        <Link href="/">
-          <Button>Return</Button>
-        </Link>
-      </div>
-    );
-  }
 
   return (
     <div className="container flex h-screen flex-col items-center justify-center gap-3">

@@ -44,7 +44,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@formbase/ui/primitives/popover';
-
 import { cn } from '@formbase/ui/utils/cn';
 
 import { CopyButton } from '~/components/copy-button';
@@ -79,7 +78,7 @@ export function ApiKeysSection() {
         setNewKeyValue(data.key);
         setCreateDialogOpen(false);
         form.reset();
-        utils.apiKeys.list.invalidate();
+        void utils.apiKeys.list.invalidate();
         toast.success('API key created');
       },
     });
@@ -88,7 +87,7 @@ export function ApiKeysSection() {
     api.apiKeys.delete.useMutation({
       onSuccess: () => {
         setDeleteKeyId(null);
-        utils.apiKeys.list.invalidate();
+        void utils.apiKeys.list.invalidate();
         toast.success('API key deleted');
       },
     });
@@ -180,7 +179,6 @@ export function ApiKeysSection() {
                             selected={field.value}
                             onSelect={field.onChange}
                             disabled={(date) => date < new Date()}
-                            initialFocus
                           />
                         </PopoverContent>
                       </Popover>
@@ -205,7 +203,9 @@ export function ApiKeysSection() {
             <ApiKeyRow
               key={apiKey.id}
               apiKey={apiKey}
-              onDelete={() => setDeleteKeyId(apiKey.id)}
+              onDelete={() => {
+                setDeleteKeyId(apiKey.id);
+              }}
             />
           ))}
         </div>
@@ -218,7 +218,12 @@ export function ApiKeysSection() {
         </div>
       )}
 
-      <Dialog open={!!newKeyValue} onOpenChange={() => setNewKeyValue(null)}>
+      <Dialog
+        open={!!newKeyValue}
+        onOpenChange={() => {
+          setNewKeyValue(null);
+        }}
+      >
         <DialogContent showCloseButton={false}>
           <DialogHeader>
             <DialogTitle>API Key Created</DialogTitle>
@@ -231,14 +236,24 @@ export function ApiKeysSection() {
             {newKeyValue && <CopyButton text={newKeyValue} />}
           </div>
           <DialogFooter>
-            <Button onClick={() => setNewKeyValue(null)}>Done</Button>
+            <Button
+              onClick={() => {
+                setNewKeyValue(null);
+              }}
+            >
+              Done
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <AlertDialog
         open={!!deleteKeyId}
-        onOpenChange={(open) => !open && setDeleteKeyId(null)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleteKeyId(null);
+          }
+        }}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -278,7 +293,9 @@ interface ApiKeyRowProps {
 
 function ApiKeyRow({ apiKey, onDelete }: ApiKeyRowProps) {
   const isExpired = apiKey.expiresAt && new Date(apiKey.expiresAt) < new Date();
-  const { data: usageStats } = api.apiKeys.getUsageStats.useQuery({ id: apiKey.id });
+  const { data: usageStats } = api.apiKeys.getUsageStats.useQuery({
+    id: apiKey.id,
+  });
 
   return (
     <div className="flex items-center justify-between p-4">
@@ -295,7 +312,9 @@ function ApiKeyRow({ apiKey, onDelete }: ApiKeyRowProps) {
           <code className="rounded bg-muted px-1.5 py-0.5">
             {apiKey.keyPrefix}...
           </code>
-          <span>Created {format(new Date(apiKey.createdAt), 'MMM d, yyyy')}</span>
+          <span>
+            Created {format(new Date(apiKey.createdAt), 'MMM d, yyyy')}
+          </span>
           {apiKey.lastUsedAt && (
             <span>
               Last used {format(new Date(apiKey.lastUsedAt), 'MMM d, yyyy')}

@@ -3,14 +3,19 @@
 import { useRouter } from 'next/navigation';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { BellRing, ExternalLink, FolderPen, FolderX, Shield } from 'lucide-react';
+import {
+  BellRing,
+  ExternalLink,
+  FolderPen,
+  FolderX,
+  Shield,
+} from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { type RouterOutputs } from '@formbase/api';
 import { type User } from '@formbase/auth';
-import { LoadingButton } from '~/components/loading-button';
 import {
   Form,
   FormControl,
@@ -23,6 +28,7 @@ import { Input } from '@formbase/ui/primitives/input';
 import { Label } from '@formbase/ui/primitives/label';
 import { Switch } from '@formbase/ui/primitives/switch';
 
+import { LoadingButton } from '~/components/loading-button';
 import { api } from '~/lib/trpc/react';
 
 import { revalidateDashboard } from '../../_actions/revalidateDashboard';
@@ -40,10 +46,6 @@ const enableFormSubmissionsSchema = z.object({
   enableFormSubmissions: z.boolean().default(true).optional(),
 });
 
-const enableRetentionSchema = z.object({
-  enableRetention: z.boolean().default(true).optional(),
-});
-
 const enableNotificationsSchema = z.object({
   enableNotifications: z.boolean().default(true).optional(),
 });
@@ -58,7 +60,6 @@ const honeypotFieldSchema = z.object({
 
 type FormNameSchema = z.infer<typeof formNameSchema>;
 type EnableFormSubmissionsSchema = z.infer<typeof enableFormSubmissionsSchema>;
-type _EnableSubmissionsRetentionSchema = z.infer<typeof enableRetentionSchema>;
 type EnableFormNotificationsSchema = z.infer<typeof enableNotificationsSchema>;
 type FormReturnUrlSchema = z.infer<typeof formReturnUrlSchema>;
 
@@ -368,7 +369,7 @@ const EnableFormSubmissions = ({
   const router = useRouter();
 
   const enableSubmissionsForm = useForm<EnableFormSubmissionsSchema>({
-    resolver: zodResolver(enableRetentionSchema),
+    resolver: zodResolver(enableFormSubmissionsSchema),
     defaultValues: {
       enableFormSubmissions: enableSubmissions,
     },
@@ -562,7 +563,9 @@ const HoneypotFieldSetting = ({
 
   return (
     <Form {...honeypotFieldForm}>
-      <form onSubmit={honeypotFieldForm.handleSubmit(handleHoneypotFieldSubmit)}>
+      <form
+        onSubmit={honeypotFieldForm.handleSubmit(handleHoneypotFieldSubmit)}
+      >
         <FormField
           control={honeypotFieldForm.control}
           name="honeypotField"

@@ -2,9 +2,9 @@
 
 import * as React from 'react';
 
-import { EyeIcon, EyeOffIcon } from 'lucide-react';
-
 import type { InputProps } from '@formbase/ui/primitives/input';
+
+import { EyeIcon, EyeOffIcon } from 'lucide-react';
 
 import { Input } from '@formbase/ui/primitives/input';
 import { cn } from '@formbase/ui/utils/cn';
@@ -13,7 +13,9 @@ const PasswordInputComponent = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, ...props }, ref) => {
     const [isVisible, setIsVisible] = React.useState(false);
 
-    const toggleVisibility = () => setIsVisible((prev) => !prev);
+    const toggleVisibility = () => {
+      setIsVisible((prev) => !prev);
+    };
 
     return (
       <div className="relative">

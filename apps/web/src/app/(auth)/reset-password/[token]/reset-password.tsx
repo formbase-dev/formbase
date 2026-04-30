@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-import type { FormEvent } from 'react';
+import type { SyntheticEvent } from 'react';
 
 import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
 import { toast } from 'sonner';
@@ -19,13 +19,14 @@ export function ResetPassword({ token }: { token: string }) {
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleReset = async (event: FormEvent<HTMLFormElement>) => {
+  const handleReset = async (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFormError(null);
     setIsSubmitting(true);
 
     const formData = new FormData(event.currentTarget);
-    const newPassword = String(formData.get('password') ?? '');
+    const passwordValue = formData.get('password');
+    const newPassword = typeof passwordValue === 'string' ? passwordValue : '';
 
     try {
       const { error } = await authClient.resetPassword({
@@ -34,8 +35,9 @@ export function ResetPassword({ token }: { token: string }) {
       });
 
       if (error) {
-        setFormError(error.message);
-        toast(error.message, {
+        const errorMessage = error.message ?? null;
+        setFormError(errorMessage);
+        toast(errorMessage ?? 'Unable to reset password. Please try again.', {
           icon: (
             <ExclamationTriangleIcon className="h-5 w-5 text-destructive" />
           ),

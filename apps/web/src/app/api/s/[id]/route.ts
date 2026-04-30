@@ -1,14 +1,13 @@
-import { env } from "@formbase/env";
-import { userAgent } from "next/server";
+import { userAgent } from 'next/server';
 
-import { sendMail } from "~/lib/email/mailer";
-import { renderNewSubmissionEmail } from "~/lib/email/templates/new-submission";
-import { checkForSpam, stripHoneypotField } from "~/lib/spam-detection";
-import { api } from "~/lib/trpc/server";
-import { assignFileOrImage, uploadFileFromBlob } from "~/lib/upload-file";
-import { type RouterOutputs } from "@formbase/api";
+import { type RouterOutputs } from '@formbase/api';
+import { env } from '@formbase/env';
 
-type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
+import { sendMail } from '~/lib/email/mailer';
+import { renderNewSubmissionEmail } from '~/lib/email/templates/new-submission';
+import { checkForSpam, stripHoneypotField } from '~/lib/spam-detection';
+import { api } from '~/lib/trpc/server';
+import { assignFileOrImage, uploadFileFromBlob } from '~/lib/upload-file';
 
 type FormDataResult =
   | {
@@ -30,12 +29,15 @@ const CORS_HEADERS = {
 async function getFormData(request: Request): Promise<FormDataResult> {
   const contentType = request.headers.get('content-type') ?? '';
 
-  if (contentType.includes('multipart/form-data') || contentType.includes('application/x-www-form-urlencoded')) {
+  if (
+    contentType.includes('multipart/form-data') ||
+    contentType.includes('application/x-www-form-urlencoded')
+  ) {
     try {
       const rawFormData = await request.formData();
       const data: Record<string, Blob | string | undefined> = {};
       rawFormData.forEach((value, key) => {
-        data[key] = value as Blob | string;
+        data[key] = value;
       });
       return { data, source: 'formData', rawFormData };
     } catch {
@@ -44,13 +46,14 @@ async function getFormData(request: Request): Promise<FormDataResult> {
   }
 
   try {
-    const jsonData = (await request.json()) as Record<string, unknown>;
+    const jsonData: unknown = await request.json();
     if (typeof jsonData !== 'object' || jsonData === null) {
       throw new Error('Invalid form data');
     }
+    const jsonObject = jsonData as Record<string, unknown>;
     const data: Record<string, Blob | string | undefined> = {};
-    Object.keys(jsonData).forEach((key) => {
-      data[key] = jsonData[key] as Blob | string | undefined;
+    Object.keys(jsonObject).forEach((key) => {
+      data[key] = jsonObject[key] as Blob | string | undefined;
     });
     return { data, source: 'json' };
   } catch {
@@ -99,10 +102,6 @@ export async function POST(
   try {
     const { id } = await params;
 
-    if (!id) {
-      return new Response('Form ID is required', { status: 400 });
-    }
-
     const formId = id;
     const form = await api.form.getFormById({ formId });
     if (!form) {
@@ -122,15 +121,15 @@ export async function POST(
     }
 
     const honeypotField = form.honeypotField;
-    const spamResult = checkForSpam(formData as Record<string, unknown>, honeypotField);
-    const cleanedFormData = stripHoneypotField(formData as Record<string, unknown>, honeypotField);
+    const spamResult = checkForSpam(formData, honeypotField);
+    const cleanedFormData = stripHoneypotField(formData, honeypotField);
 
     const formDataKeys = Object.keys(cleanedFormData);
     const formKeys = form.keys;
     const updatedKeys = [...new Set([...formKeys, ...formDataKeys])];
 
     await api.formData.setFormData({
-      data: cleanedFormData as Json,
+      data: cleanedFormData,
       formId,
       keys: updatedKeys,
       isSpam: spamResult.isSpam,

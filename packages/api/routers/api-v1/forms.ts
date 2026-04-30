@@ -69,7 +69,7 @@ export const formsRouter = createApiV1Router({
           description: form.description,
           returnUrl: form.returnUrl,
           keys: parseJsonArray(form.keys),
-          submissionCount: form.formData?.length ?? 0,
+          submissionCount: form.formData.length,
           createdAt: form.createdAt.toISOString(),
           updatedAt: form.updatedAt?.toISOString() ?? null,
         })),
@@ -144,7 +144,7 @@ export const formsRouter = createApiV1Router({
         description: form.description,
         returnUrl: form.returnUrl,
         keys: parseJsonArray(form.keys),
-        submissionCount: form.formData?.length ?? 0,
+        submissionCount: form.formData.length,
         createdAt: form.createdAt.toISOString(),
         updatedAt: form.updatedAt?.toISOString() ?? null,
       };

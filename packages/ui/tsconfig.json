@@ -2,11 +2,12 @@
   "extends": ["@formbase/tsconfig/react.json"],
   "compilerOptions": {
     "tsBuildInfoFile": ".tsbuildinfo",
+    "exactOptionalPropertyTypes": false,
     "baseUrl": ".",
     "paths": {
       "~/*": ["./src/*"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx", ".eslintrc.cjs", "**/*.cjs"],
+  "include": ["**/*.ts", "**/*.tsx", "**/*.cjs"],
   "exclude": ["dist", "node_modules"]
 }

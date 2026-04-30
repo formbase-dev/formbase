@@ -75,9 +75,7 @@ export const ResponsiveDialog = (props: {
             : props.children}
         </div>
         <DrawerFooter className="pt-2">
-          {props.footer ? (
-            props.footer
-          ) : (
+          {props.footer ?? (
             <DrawerClose asChild>
               <Button variant="outline">Cancel</Button>
             </DrawerClose>

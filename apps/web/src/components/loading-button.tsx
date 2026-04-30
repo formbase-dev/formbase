@@ -19,7 +19,7 @@ const LoadingButton = forwardRef<HTMLButtonElement, LoadingButtonProps>(
       <Button
         ref={ref}
         {...props}
-        disabled={props.disabled ? props.disabled : loading}
+        disabled={props.disabled ?? loading}
         className={cn(className, 'relative')}
       >
         <span className={cn(loading ? 'opacity-0' : '')}>{children}</span>

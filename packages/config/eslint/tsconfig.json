@@ -1,4 +1,4 @@
 {
   "extends": ["@formbase/tsconfig/base.json"],
-  "include": ["*.js", ".eslintrc.cjs"]
+  "include": ["*.js"]
 }

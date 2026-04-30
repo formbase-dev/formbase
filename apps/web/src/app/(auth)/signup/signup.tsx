@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-import type { FormEvent } from 'react';
+import type { SyntheticEvent } from 'react';
 
 import { IconBrandGithub, IconBrandGoogleFilled } from '@tabler/icons-react';
 
@@ -33,15 +33,18 @@ export function Signup() {
 
   const displayError = formError ?? socialError;
 
-  const handleSignup = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSignup = async (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFormError(null);
     setIsSubmitting(true);
 
     const formData = new FormData(event.currentTarget);
-    const name = String(formData.get('name') ?? '');
-    const email = String(formData.get('email') ?? '');
-    const password = String(formData.get('password') ?? '');
+    const nameValue = formData.get('name');
+    const emailValue = formData.get('email');
+    const passwordValue = formData.get('password');
+    const name = typeof nameValue === 'string' ? nameValue : '';
+    const email = typeof emailValue === 'string' ? emailValue : '';
+    const password = typeof passwordValue === 'string' ? passwordValue : '';
 
     try {
       const { error } = await signUp.email({

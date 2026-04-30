@@ -23,7 +23,7 @@ import {
 import { AlertTriangle, CheckCircle, Trash2, TrashIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { type FormData } from '@formbase/db/schema';
+import { type RouterOutputs } from '@formbase/api';
 import { Badge } from '@formbase/ui/primitives/badge';
 import { Button } from '@formbase/ui/primitives/button';
 import { Checkbox } from '@formbase/ui/primitives/checkbox';
@@ -47,9 +47,27 @@ import { api } from '~/lib/trpc/react';
 
 import { ImagePreviewDialog } from './image-preview-dialog';
 
+type Submission = RouterOutputs['formData']['all'][number];
+
+const formatTableValue = (value: unknown): string => {
+  if (value === null || value === undefined) {
+    return '';
+  }
+
+  if (typeof value === 'string') {
+    return value;
+  }
+
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+
+  return JSON.stringify(value);
+};
+
 type SubmissionsTableProps = {
   formKeys: string[];
-  submissions: FormData[];
+  submissions: Submission[];
 };
 
 export function SubmissionsTable({
@@ -108,22 +126,19 @@ export function SubmissionsTable({
       {
         onSuccess: () => {
           router.refresh();
-          toast.success(
-            isSpam ? 'Marked as spam' : 'Marked as not spam',
-            {
-              icon: isSpam ? (
-                <AlertTriangle className="h-4 w-4" />
-              ) : (
-                <CheckCircle className="h-4 w-4" />
-              ),
-            },
-          );
+          toast.success(isSpam ? 'Marked as spam' : 'Marked as not spam', {
+            icon: isSpam ? (
+              <AlertTriangle className="h-4 w-4" />
+            ) : (
+              <CheckCircle className="h-4 w-4" />
+            ),
+          });
         },
       },
     );
   };
 
-  const columns: Array<ColumnDef<FormData>> = [
+  const columns: Array<ColumnDef<Submission>> = [
     {
       id: 'select',
       header: ({ table }) => {
@@ -134,7 +149,7 @@ export function SubmissionsTable({
               (table.getIsSomePageRowsSelected() && 'indeterminate')
             }
             onCheckedChange={(value) => {
-              table.toggleAllPageRowsSelected(!!value);
+              table.toggleAllPageRowsSelected(value);
             }}
             aria-label="Select all"
           />
@@ -168,13 +183,14 @@ export function SubmissionsTable({
               </Button>
             );
           },
-          cell: ({ row }: { row: Row<FormData> }) => {
-            const data = row.original.data as Record<string, unknown> | null;
-            if (!data?.[submission]) {
+          cell: ({ row }: { row: Row<Submission> }) => {
+            const data = row.original.data;
+            const fileUrl = data?.[submission];
+
+            if (typeof fileUrl !== 'string') {
               return null;
             }
 
-            const fileUrl = data[submission] as string;
             const fileName = formatFileName(fileUrl);
 
             return (
@@ -209,17 +225,16 @@ export function SubmissionsTable({
             </Button>
           );
         },
-        cell: ({ row }: { row: Row<FormData> }) => {
-          const data = row.original.data as Record<
-            string,
-            string | undefined
-          > | null;
+        cell: ({ row }: { row: Row<Submission> }) => {
+          const data = row.original.data;
 
           if (!data) {
             return null;
           }
 
-          return <div>{data[submission]}</div>;
+          const value = data[submission];
+
+          return <div>{formatTableValue(value)}</div>;
         },
       };
     }),
@@ -242,7 +257,7 @@ export function SubmissionsTable({
         const dateB = new Date(b.original.createdAt);
         return dateA.getTime() - dateB.getTime();
       },
-      cell: ({ row }: { row: Row<FormData> }) => {
+      cell: ({ row }: { row: Row<Submission> }) => {
         const date = new Date(row.original.createdAt);
         const dateString = date.toLocaleDateString('en-US', {
           month: 'long',
@@ -264,15 +279,12 @@ export function SubmissionsTable({
       accessorKey: 'isSpam',
       header: () => {
         return (
-          <Button
-            variant="ghost"
-            className="px-0 py-0 hover:bg-transparent"
-          >
+          <Button variant="ghost" className="px-0 py-0 hover:bg-transparent">
             Status
           </Button>
         );
       },
-      cell: ({ row }: { row: Row<FormData> }) => {
+      cell: ({ row }: { row: Row<Submission> }) => {
         const isSpam = row.original.isSpam;
         if (!isSpam) {
           return null;
@@ -289,7 +301,7 @@ export function SubmissionsTable({
       id: 'actions',
       enableHiding: false,
       size: 20,
-      cell: ({ row }: { row: Row<FormData> }) => {
+      cell: ({ row }: { row: Row<Submission> }) => {
         const submissionId = row.original.id;
         const isSpam = row.original.isSpam;
 

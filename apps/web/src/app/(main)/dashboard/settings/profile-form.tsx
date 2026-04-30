@@ -9,8 +9,6 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { type User } from '@formbase/auth';
-
-import { LoadingButton } from '~/components/loading-button';
 import {
   Form,
   FormControl,
@@ -21,6 +19,7 @@ import {
 } from '@formbase/ui/primitives/form';
 import { Input } from '@formbase/ui/primitives/input';
 
+import { LoadingButton } from '~/components/loading-button';
 import { api } from '~/lib/trpc/react';
 
 const profileFormSchema = z.object({
@@ -42,7 +41,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      name: user.name ?? '',
+      name: user.name,
       email: user.email,
     },
     mode: 'onChange',

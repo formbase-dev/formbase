@@ -4,13 +4,11 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-import type { FormEvent } from 'react';
+import type { SyntheticEvent } from 'react';
 
 import { IconBrandGithub, IconBrandGoogleFilled } from '@tabler/icons-react';
 
 import { signIn } from '@formbase/auth/client';
-
-import { Logo } from '../_components/logo';
 import { Button } from '@formbase/ui/primitives/button';
 import { Input } from '@formbase/ui/primitives/input';
 import { Label } from '@formbase/ui/primitives/label';
@@ -19,6 +17,8 @@ import { Separator } from '@formbase/ui/primitives/separator';
 import { LoadingButton } from '~/components/loading-button';
 import { PasswordInput } from '~/components/password-input';
 import { useSocialAuth } from '~/lib/hooks/use-social-auth';
+
+import { Logo } from '../_components/logo';
 
 export function Login() {
   const router = useRouter();
@@ -33,14 +33,16 @@ export function Login() {
 
   const displayError = formError ?? socialError;
 
-  const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
+  const handleLogin = async (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFormError(null);
     setIsSubmitting(true);
 
     const formData = new FormData(event.currentTarget);
-    const email = String(formData.get('email') ?? '');
-    const password = String(formData.get('password') ?? '');
+    const emailValue = formData.get('email');
+    const passwordValue = formData.get('password');
+    const email = typeof emailValue === 'string' ? emailValue : '';
+    const password = typeof passwordValue === 'string' ? passwordValue : '';
 
     try {
       const { error } = await signIn.email({

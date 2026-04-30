@@ -1,8 +1,9 @@
-import { initTRPC, TRPCError } from '@trpc/server';
+import type { User } from '@formbase/db/schema';
 import type { OpenApiMeta } from 'trpc-to-openapi';
+
+import { initTRPC, TRPCError } from '@trpc/server';
 import { ZodError } from 'zod';
 
-import type { User } from '@formbase/db/schema';
 import { db } from '@formbase/db';
 
 import { validateApiKey } from '../../middleware/api-auth';
@@ -22,9 +23,9 @@ export interface ApiV1Context {
   retryAfterSeconds?: number;
 }
 
-export const createApiV1Context = async (opts: {
+export const createApiV1Context = (opts: {
   headers: Headers;
-}): Promise<ApiV1Context> => {
+}): ApiV1Context => {
   return {
     db,
     headers: opts.headers,
@@ -48,6 +49,8 @@ const t = initTRPC
   });
 
 export const createApiV1Router = t.router;
+
+export const createApiV1Caller = t.createCallerFactory;
 
 export const publicApiProcedure = t.procedure;
 

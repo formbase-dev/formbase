@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 import { GearIcon } from '@radix-ui/react-icons';
-import { FileTextIcon } from 'lucide-react';
+import { BookOpenIcon, FileTextIcon } from 'lucide-react';
 
 import { cn } from '@formbase/ui/utils/cn';
 

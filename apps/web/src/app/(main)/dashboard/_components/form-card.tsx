@@ -108,7 +108,9 @@ export function FormCard({
                   <Button
                     variant="ghost"
                     className="h-8 w-8 p-0"
-                    onClick={(e) => e.preventDefault()}
+                    onClick={(e) => {
+                      e.preventDefault();
+                    }}
                   >
                     <span className="sr-only">Open Form Endpoint menu</span>
                     <DotsVerticalIcon className="h-4 w-4" />
@@ -118,7 +120,7 @@ export function FormCard({
                   <DropdownMenuItem
                     onClick={(e) => {
                       e.preventDefault();
-                      handleDuplicate();
+                      void handleDuplicate();
                     }}
                     disabled={isDuplicating}
                   >

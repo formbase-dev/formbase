@@ -15,7 +15,7 @@ type CopyButtonProps = {
 };
 
 export const CopyButton = ({ text, className }: CopyButtonProps) => {
-  const [_, copy] = useCopyToClipboard();
+  const [, copy] = useCopyToClipboard();
   const [hasCopied, setHasCopied] = useState(false);
 
   return (

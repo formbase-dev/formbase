@@ -11,6 +11,8 @@ const getClient = () => {
   if (client) return client;
   if (
     !env.STORAGE_ENDPOINT ||
+    env.STORAGE_PORT === undefined ||
+    env.STORAGE_USESSL === undefined ||
     !env.STORAGE_ACCESS_KEY ||
     !env.STORAGE_SECRET_KEY
   ) {
@@ -18,8 +20,8 @@ const getClient = () => {
   }
   client = new Client({
     endPoint: env.STORAGE_ENDPOINT,
-    port: env.STORAGE_PORT!,
-    useSSL: env.STORAGE_USESSL!,
+    port: env.STORAGE_PORT,
+    useSSL: env.STORAGE_USESSL,
     accessKey: env.STORAGE_ACCESS_KEY,
     secretKey: env.STORAGE_SECRET_KEY,
   });
@@ -35,7 +37,12 @@ async function ensureBucket(bucketName: string) {
 
 export async function uploadFile(fileBuffer: Buffer, mimetype: string) {
   const c = getClient();
-  const bucket = env.STORAGE_BUCKET!;
+  const bucket = env.STORAGE_BUCKET;
+
+  if (!bucket) {
+    throw new Error('Storage bucket is not configured');
+  }
+
   const name = `${generateId(15)}.${mimetype.split('/')[1]}`;
 
   await ensureBucket(bucket);
@@ -64,8 +71,7 @@ export function assignFileOrImage({
   fileUrl: string;
 }): void {
   const isImage =
-    formData[key] instanceof Blob &&
-    (formData[key] as Blob).type.startsWith('image/');
+    formData[key] instanceof Blob && formData[key].type.startsWith('image/');
   const field = isImage ? 'image' : 'file';
   formData[field] = fileUrl;
 

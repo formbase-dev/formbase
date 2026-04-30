@@ -28,7 +28,9 @@ export function SocialLoginButtons({
         variant="outline"
         className="w-full"
         disabled={isDisabled}
-        onClick={() => onSocialSignIn('github')}
+        onClick={() => {
+          onSocialSignIn('github');
+        }}
       >
         <GitHubLogoIcon className="mr-2 h-5 w-5" />
         {actionText} with GitHub
@@ -37,7 +39,9 @@ export function SocialLoginButtons({
         variant="outline"
         className="w-full"
         disabled={isDisabled}
-        onClick={() => onSocialSignIn('google')}
+        onClick={() => {
+          onSocialSignIn('google');
+        }}
       >
         {actionText} with Google
       </Button>

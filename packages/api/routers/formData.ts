@@ -7,10 +7,7 @@ import { generateId } from '@formbase/utils/generate-id';
 
 import { createTRPCRouter, protectedProcedure, publicProcedure } from '../trpc';
 import { parseJsonObject, serializeJson } from '../utils/json';
-import {
-  assertFormDataOwnership,
-  assertFormOwnership,
-} from './form-ownership';
+import { assertFormDataOwnership, assertFormOwnership } from './form-ownership';
 
 const { eq } = drizzlePrimitives;
 
@@ -106,7 +103,7 @@ export const formDataRouter = createTRPCRouter({
           ...flattenObject({
             ...data,
             data: parsed ?? {},
-          } as Record<string, unknown>),
+          }),
           ...normalized,
         };
       });

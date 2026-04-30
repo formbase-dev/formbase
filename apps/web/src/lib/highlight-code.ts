@@ -2,12 +2,12 @@
 
 import type { ThemeInput } from 'shiki';
 
-import { getHighlighter } from 'shiki';
+import { createHighlighter } from 'shiki';
 
 import { blackoutTheme } from './themes/dark';
 
 export async function highlightCode(code: string) {
-  const highlighter = await getHighlighter({
+  const highlighter = await createHighlighter({
     langs: ['typescript', 'html'],
     themes: [],
   });

@@ -24,7 +24,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   const path = request.nextUrl.pathname;
   const url = request.nextUrl as unknown as URL;
 
-  if (path.match('^/s/([a-zA-Z0-9_-]+)$')) {
+  if (/^\/s\/([a-zA-Z0-9_-]+)$/.exec(path)) {
     const subpath = path.split('/')[path.split('/').length - 1];
 
     return NextResponse.rewrite(new URL(`/api/s/${subpath}`, url));

@@ -1,9 +1,21 @@
-"use client"
+'use client';
 
-import * as React from "react"
-import { Slider as SliderPrimitive } from "@base-ui/react/slider"
+import * as React from 'react';
 
-import { cn } from "@formbase/ui/utils/cn"
+import { Slider as SliderPrimitive } from '@base-ui/react/slider';
+
+import { cn } from '@formbase/ui/utils/cn';
+
+const getNumberArray = (value: unknown): number[] | undefined => {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+
+  const numbers = value.filter(
+    (item): item is number => typeof item === 'number',
+  );
+  return numbers.length === value.length ? numbers : undefined;
+};
 
 function Slider({
   className,
@@ -14,14 +26,9 @@ function Slider({
   ...props
 }: SliderPrimitive.Root.Props) {
   const _values = React.useMemo(
-    () =>
-      Array.isArray(value)
-        ? value
-        : Array.isArray(defaultValue)
-          ? defaultValue
-          : [min, max],
-    [value, defaultValue, min, max]
-  )
+    () => getNumberArray(value) ?? getNumberArray(defaultValue) ?? [min, max],
+    [value, defaultValue, min, max],
+  );
 
   return (
     <SliderPrimitive.Root
@@ -36,8 +43,8 @@ function Slider({
     >
       <SliderPrimitive.Control
         className={cn(
-          "data-vertical:min-h-40 relative flex w-full touch-none items-center select-none data-disabled:opacity-50 data-vertical:h-full data-vertical:w-auto data-vertical:flex-col",
-          className
+          'data-vertical:min-h-40 relative flex w-full touch-none items-center select-none data-disabled:opacity-50 data-vertical:h-full data-vertical:w-auto data-vertical:flex-col',
+          className,
         )}
       >
         <SliderPrimitive.Track
@@ -58,7 +65,7 @@ function Slider({
         ))}
       </SliderPrimitive.Control>
     </SliderPrimitive.Root>
-  )
+  );
 }
 
-export { Slider }
+export { Slider };

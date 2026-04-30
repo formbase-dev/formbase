@@ -24,6 +24,7 @@
   },
   "devDependencies": {
     "@formbase/tsconfig": "workspace:*",
+    "@types/node": "^20.19.39",
     "dotenv": "^16.4.5",
     "dotenv-cli": "^7.4.2",
     "drizzle-kit": "^0.21.4",

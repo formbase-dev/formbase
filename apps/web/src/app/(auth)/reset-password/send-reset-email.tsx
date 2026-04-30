@@ -1,7 +1,9 @@
 'use client';
 
-import { type FormEvent, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+
+import type { SyntheticEvent } from 'react';
 
 import { toast } from 'sonner';
 
@@ -16,13 +18,14 @@ export function SendResetEmail() {
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleResetRequest = async (event: FormEvent<HTMLFormElement>) => {
+  const handleResetRequest = async (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFormError(null);
     setIsSubmitting(true);
 
     const formData = new FormData(event.currentTarget);
-    const email = String(formData.get('email') ?? '');
+    const emailValue = formData.get('email');
+    const email = typeof emailValue === 'string' ? emailValue : '';
 
     try {
       const { error } = await authClient.requestPasswordReset({
@@ -30,7 +33,7 @@ export function SendResetEmail() {
       });
 
       if (error) {
-        setFormError(error.message);
+        setFormError(error.message ?? null);
         return;
       }
 
@@ -46,10 +49,7 @@ export function SendResetEmail() {
   return (
     <form className="mt-8 space-y-4" onSubmit={handleResetRequest}>
       <div>
-        <Label
-          htmlFor="email"
-          className="text-sm font-medium text-foreground"
-        >
+        <Label htmlFor="email" className="text-sm font-medium text-foreground">
           Email
         </Label>
         <Input

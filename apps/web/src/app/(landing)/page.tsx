@@ -1,6 +1,6 @@
 import Image from 'next/image';
 
-import { Code, ListPlus, MousePointer, Server } from 'lucide-react';
+import { Code, ListPlus, MousePointer } from 'lucide-react';
 
 const githubUrl = 'https://github.com/eight-labs/formbase';
 

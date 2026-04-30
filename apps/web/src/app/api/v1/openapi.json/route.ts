@@ -1,11 +1,11 @@
 import { generateOpenApiDocument } from 'trpc-to-openapi';
 
-import { env } from '@formbase/env';
 import { apiV1Router } from '@formbase/api/routers/api-v1';
+import { env } from '@formbase/env';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export function GET() {
   const openApiDocument = generateOpenApiDocument(apiV1Router, {
     title: 'Formbase API',
     version: '1.0.0',

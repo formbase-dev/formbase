@@ -30,6 +30,7 @@ export function stripHoneypotField(
   formData: Record<string, unknown>,
   honeypotField: string,
 ): Record<string, unknown> {
-  const { [honeypotField]: _, ...rest } = formData;
-  return rest;
+  return Object.fromEntries(
+    Object.entries(formData).filter(([key]) => key !== honeypotField),
+  );
 }

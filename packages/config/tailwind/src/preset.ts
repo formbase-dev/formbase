@@ -1,3 +1,4 @@
+import themer from '@tailus/themer';
 import aspectRatio from '@tailwindcss/aspect-ratio';
 import containerQueries from '@tailwindcss/container-queries';
 import forms from '@tailwindcss/forms';
@@ -6,7 +7,6 @@ import animate from 'tailwindcss-animate';
 import plugin from 'tailwindcss/plugin';
 
 import { type Config } from 'tailwindcss';
-import themer from '@tailus/themer';
 
 // Default sans-serif font stack (previously from tailwindcss/defaultTheme)
 const defaultSansFonts = [
@@ -126,47 +126,47 @@ export const tailwindPreset: Config = {
     typography,
     forms,
     aspectRatio,
-    {
-      config: containerQueries.config ?? {},
-      handler: containerQueries.handler,
-    },
+    containerQueries,
     themer({
-        radius: 'smoothest',
-        background: 'lighter',
-        border: 'light',
-        padding: 'large',
-        components: {
-          button: {
-            rounded: '2xl',
-          },
+      radius: 'smoothest',
+      background: 'lighter',
+      border: 'light',
+      padding: 'large',
+      components: {
+        button: {
+          rounded: '2xl',
         },
-      }),
+      },
+    }),
     // Base UI data attribute variants
-    plugin(function ({ addVariant }) {
+    plugin(function (api) {
       // Base UI state variants
-      addVariant('data-open', '&[data-open]');
-      addVariant('data-closed', '&:not([data-open])');
-      addVariant('data-checked', '&[data-checked]');
-      addVariant('data-unchecked', '&:not([data-checked])');
-      addVariant('data-disabled', '&[data-disabled]');
-      addVariant('data-highlighted', '&[data-highlighted]');
-      addVariant('data-pressed', '&[data-pressed]');
-      addVariant('data-selected', '&[data-selected]');
-      addVariant('data-invalid', '&[data-invalid]');
-      addVariant('data-valid', '&[data-valid]');
-      addVariant('data-required', '&[data-required]');
-      addVariant('data-readonly', '&[data-readonly]');
-      addVariant('data-focus', '&[data-focus]');
-      addVariant('data-focus-visible', '&[data-focus-visible]');
-      addVariant('data-active', '&[data-active]');
-      addVariant('data-hover', '&[data-hover]');
+      api.addVariant('data-open', '&[data-open]');
+      api.addVariant('data-closed', '&:not([data-open])');
+      api.addVariant('data-checked', '&[data-checked]');
+      api.addVariant('data-unchecked', '&:not([data-checked])');
+      api.addVariant('data-disabled', '&[data-disabled]');
+      api.addVariant('data-highlighted', '&[data-highlighted]');
+      api.addVariant('data-pressed', '&[data-pressed]');
+      api.addVariant('data-selected', '&[data-selected]');
+      api.addVariant('data-invalid', '&[data-invalid]');
+      api.addVariant('data-valid', '&[data-valid]');
+      api.addVariant('data-required', '&[data-required]');
+      api.addVariant('data-readonly', '&[data-readonly]');
+      api.addVariant('data-focus', '&[data-focus]');
+      api.addVariant('data-focus-visible', '&[data-focus-visible]');
+      api.addVariant('data-active', '&[data-active]');
+      api.addVariant('data-hover', '&[data-hover]');
 
-      // For children with data attributes
-      addVariant('in-data-open', '[data-open] &');
-      addVariant('in-data-closed', ':not([data-open]) &');
+      // for children with data attributes
+      api.addVariant('in-data-open', '[data-open] &');
+      api.addVariant('in-data-closed', ':not([data-open]) &');
 
-      // Supports backdrop filter
-      addVariant('supports-backdrop-filter', '@supports (backdrop-filter: blur(0))');
+      // supports backdrop filter
+      api.addVariant(
+        'supports-backdrop-filter',
+        '@supports (backdrop-filter: blur(0))',
+      );
     }),
   ],
 };

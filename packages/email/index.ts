@@ -47,7 +47,14 @@ const getTransporter = () => {
       name: 'noop',
       version: '1.0.0',
       send: (_mail, callback) => {
-        callback(null, { messageId: 'test-message-id' });
+        callback(null, {
+          accepted: [],
+          envelope: { from: '', to: [] },
+          messageId: 'test-message-id',
+          pending: [],
+          rejected: [],
+          response: '250 ok',
+        });
       },
     });
     return cachedTransporter;
@@ -74,7 +81,9 @@ const getTransporter = () => {
     !!env.SMTP_PASS;
 
   if (!hasSmtpConfig) {
-    throw new Error('Email transport not configured. Set SMTP_TRANSPORT to resend or smtp.');
+    throw new Error(
+      'Email transport not configured. Set SMTP_TRANSPORT to resend or smtp.',
+    );
   }
 
   cachedTransporter = createSmtpTransport();
@@ -91,4 +100,3 @@ export const sendMail = async ({ to, subject, body }: MessageInfo) => {
   };
   return transporter.sendMail(mailOptions);
 };
-

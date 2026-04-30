@@ -39,10 +39,17 @@ export const assertFormDataOwnership = async (
     },
   });
 
-  if (!formData?.form || formData.form.userId !== ctx.user.id) {
+  if (formData?.form.userId !== ctx.user.id) {
     throw new TRPCError({ code: 'NOT_FOUND' });
   }
 
-  const { form, ...rest } = formData;
-  return rest;
+  return {
+    id: formData.id,
+    formId: formData.formId,
+    data: formData.data,
+    createdAt: formData.createdAt,
+    isSpam: formData.isSpam,
+    spamReason: formData.spamReason,
+    manualOverride: formData.manualOverride,
+  };
 };

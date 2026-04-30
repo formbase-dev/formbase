@@ -10,7 +10,7 @@ type CopyFormIdProps = {
 };
 
 export default function CopyFormId({ formId }: CopyFormIdProps) {
-  const [_, copy] = useCopyToClipboard();
+  const [, copy] = useCopyToClipboard();
 
   return (
     <div className="mt-2 flex items-center gap-2">

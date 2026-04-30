@@ -4,11 +4,11 @@ import { env } from '@formbase/env';
 
 export default {
   dialect: 'sqlite',
-  driver: 'libsql',
+  driver: 'turso',
   schema: './schema/index.ts',
   out: './drizzle',
   dbCredentials: {
     url: env.DATABASE_URL,
-    authToken: env.TURSO_AUTH_TOKEN,
+    ...(env.TURSO_AUTH_TOKEN ? { authToken: env.TURSO_AUTH_TOKEN } : {}),
   },
 } satisfies Config;

@@ -1,6 +1,10 @@
 import { getSession } from '@formbase/auth/server';
-import { type FormData } from '@formbase/db/schema';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@formbase/ui/primitives/tabs';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@formbase/ui/primitives/tabs';
 
 import { CopyButton } from '~/components/copy-button';
 import { api } from '~/lib/trpc/server';
@@ -53,7 +57,7 @@ export default async function FormPage({
                   Total Submissions: {formSubmissions.length}
                 </span>
                 <ExportSubmissionsDropDownButton
-                  submissions={formSubmissions as FormData[]}
+                  submissions={formSubmissions}
                   formKeys={form?.keys ?? []}
                   formTitle={form?.title ?? ''}
                   honeypotField={form?.honeypotField ?? '_gotcha'}
@@ -61,7 +65,7 @@ export default async function FormPage({
               </div>
               <SubmissionsTable
                 formKeys={form?.keys ?? []}
-                submissions={formSubmissions as FormData[]}
+                submissions={formSubmissions}
               />
             </>
           )}

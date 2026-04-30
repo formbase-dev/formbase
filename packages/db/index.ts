@@ -1,5 +1,17 @@
 import { createClient } from '@libsql/client';
-import { and, count, eq, gt, gte, inArray, isNull, lt, lte, or, sql } from 'drizzle-orm';
+import {
+  and,
+  count,
+  eq,
+  gt,
+  gte,
+  inArray,
+  isNull,
+  lt,
+  lte,
+  or,
+  sql,
+} from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/libsql';
 
 import { env } from '@formbase/env';
@@ -17,7 +29,7 @@ if (databaseUrl.startsWith('libsql://') && !authToken) {
 
 export const queryClient = createClient({
   url: databaseUrl,
-  authToken,
+  ...(authToken ? { authToken } : {}),
 });
 
 export const db = drizzle(queryClient, {

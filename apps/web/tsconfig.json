@@ -12,7 +12,6 @@
     ".next/types/**/*.ts",
     "**/*.js",
     "**/*.cjs",
-    ".eslintrc.cjs",
     "**/*.mjs"
   ],
   "exclude": ["node_modules", "test-results"]

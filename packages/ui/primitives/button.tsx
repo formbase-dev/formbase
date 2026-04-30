@@ -47,6 +47,8 @@ const buttonVariants = cva(
 type ButtonProps = React.ComponentProps<'button'> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean;
+    nativeButton?: boolean;
+    render?: React.ReactElement;
   };
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
@@ -57,23 +59,34 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       size = 'default',
       asChild = false,
       children,
+      nativeButton,
+      render,
+      type,
       ...props
     },
     ref,
   ) => {
-    // Handle asChild by using the child element as the render prop
     const renderProp =
-      asChild && React.isValidElement(children) ? children : undefined;
+      render ??
+      (asChild && React.isValidElement(children) ? children : undefined);
+    const primitiveProps = {
+      ...props,
+      ...(renderProp || nativeButton === false
+        ? {
+            ...(renderProp ? { render: renderProp } : {}),
+            nativeButton: false,
+          }
+        : { nativeButton, type }),
+    } as React.ComponentPropsWithoutRef<typeof ButtonPrimitive>;
 
     return (
       <ButtonPrimitive
         ref={ref}
         data-slot="button"
         className={cn(buttonVariants({ variant, size, className }))}
-        {...(renderProp ? { render: renderProp, nativeButton: false } : {})}
-        {...props}
+        {...primitiveProps}
       >
-        {asChild ? undefined : children}
+        {renderProp ? undefined : children}
       </ButtonPrimitive>
     );
   },

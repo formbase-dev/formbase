@@ -1,6 +1,17 @@
 {
   "name": "@formbase/tests",
   "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:cleanup": "bun run --env-file=../apps/web/.env.local ./e2e/cleanup.ts",
+    "test:e2e:seed": "bun run --env-file=../apps/web/.env.local ./e2e/seed.ts",
+    "test:e2e:ui": "playwright test --ui",
+    "test:watch": "vitest"
+  },
   "devDependencies": {
     "@formbase/api": "workspace:*",
     "@formbase/db": "workspace:*",
@@ -10,18 +21,7 @@
     "@types/node": "^20.19.39",
     "@vitest/coverage-v8": "^2.1.8",
     "drizzle-orm": "^0.30.10",
-    "typescript": "5.8.2",
+    "typescript": "6.0.3",
     "vitest": "^2.1.8"
-  },
-  "private": true,
-  "scripts": {
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui",
-    "test:e2e:seed": "bun run --env-file=../apps/web/.env.local ./e2e/seed.ts",
-    "test:e2e:cleanup": "bun run --env-file=../apps/web/.env.local ./e2e/cleanup.ts"
-  },
-  "type": "module"
+  }
 }

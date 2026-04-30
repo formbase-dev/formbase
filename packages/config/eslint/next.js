@@ -1,6 +1,19 @@
-/** @type {import('eslint').Linter.Config} */
-const config = {
-  extends: ['plugin:@next/next/recommended'],
-};
+// @ts-nocheck
+const nextPlugin = require('@next/eslint-plugin-next');
 
-module.exports = config;
+module.exports = [
+  {
+    files: ['**/*.{js,jsx,mjs,ts,tsx,mts,cts}'],
+    plugins: {
+      '@next/next': nextPlugin,
+    },
+    settings: {
+      next: {
+        rootDir: 'apps/web/',
+      },
+    },
+    rules: {
+      ...nextPlugin.configs.recommended.rules,
+    },
+  },
+];

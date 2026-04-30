@@ -13,6 +13,7 @@
     "noUncheckedIndexedAccess": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+    "ignoreDeprecations": "6.0",
 
     "isolatedModules": true,
 
