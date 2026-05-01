@@ -14,23 +14,10 @@ import {
 } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/libsql';
 
-import { env } from '@formbase/env';
-
+import { getDatabaseCredentials } from './credentials';
 import * as schema from './schema';
 
-const databaseUrl = env.DATABASE_URL;
-const authToken = databaseUrl.startsWith('libsql://')
-  ? env.TURSO_AUTH_TOKEN
-  : undefined;
-
-if (databaseUrl.startsWith('libsql://') && !authToken) {
-  throw new Error('TURSO_AUTH_TOKEN is required for libsql:// URLs');
-}
-
-export const queryClient = createClient({
-  url: databaseUrl,
-  ...(authToken ? { authToken } : {}),
-});
+export const queryClient = createClient(getDatabaseCredentials());
 
 export const db = drizzle(queryClient, {
   schema: schema,

@@ -2,7 +2,7 @@
   "extends": ["@formbase/tsconfig/base.json"],
   "compilerOptions": {
     "types": ["node"],
-    "tsBuildInfoFile": ".tsbuildinfo"
+    "tsBuildInfoFile": ".cache/.tsbuildinfo"
   },
   "include": ["**/*.ts", "**/*.mjs"]
 }
