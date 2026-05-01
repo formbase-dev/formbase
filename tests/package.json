@@ -20,7 +20,7 @@
     "@playwright/test": "^1.59.1",
     "@types/node": "^20.19.39",
     "@vitest/coverage-v8": "^2.1.8",
-    "drizzle-orm": "^0.30.10",
+    "drizzle-orm": "^0.45.2",
     "typescript": "6.0.3",
     "vitest": "^2.1.8"
   }

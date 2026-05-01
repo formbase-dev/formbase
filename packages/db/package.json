@@ -18,8 +18,8 @@
   "dependencies": {
     "@formbase/env": "workspace:*",
     "@libsql/client": "^0.14.0",
-    "drizzle-orm": "^0.30.10",
-    "drizzle-zod": "^0.5.1",
+    "drizzle-orm": "^0.45.2",
+    "drizzle-zod": "^0.7.1",
     "zod": "^3.23.8"
   },
   "devDependencies": {
@@ -27,7 +27,7 @@
     "@types/node": "^20.19.39",
     "dotenv": "^16.4.5",
     "dotenv-cli": "^7.4.2",
-    "drizzle-kit": "^0.21.4",
+    "drizzle-kit": "^0.31.10",
     "eslint-config-formbase": "workspace:*",
     "tsx": "^4.15.5"
   }
