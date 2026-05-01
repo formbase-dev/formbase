@@ -87,7 +87,7 @@ async function handleEmailNotifications(
     await sendMail({
       to: form.defaultSubmissionEmail ?? user.email,
       subject: `New Submission for "${form.title}"`,
-      body: renderNewSubmissionEmail({
+      body: await renderNewSubmissionEmail({
         formTitle: form.title,
         submissionData,
       }),

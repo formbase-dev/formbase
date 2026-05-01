@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit --tsBuildInfoFile .tsbuildinfo"
   },
   "dependencies": {
-    "@documenso/nodemailer-resend": "^3.0.0",
+    "@documenso/nodemailer-resend": "^4.0.0",
     "@formbase/env": "workspace:*",
     "nodemailer": "^6.9.13"
   },
