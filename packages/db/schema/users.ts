@@ -20,9 +20,7 @@ export const users = sqliteTable(
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (t) => ({
-    emailIdx: index('user_email_idx').on(t.email),
-  }),
+  (t) => [index('user_email_idx').on(t.email)],
 );
 
 export const ZSelectUserSchema = createSelectSchema(users);

@@ -20,10 +20,10 @@ export const apiKeys = sqliteTable(
       .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
       .notNull(),
   },
-  (t) => ({
-    userIdx: index('api_key_user_idx').on(t.userId),
-    keyHashIdx: index('api_key_hash_idx').on(t.keyHash),
-  }),
+  (t) => [
+    index('api_key_user_idx').on(t.userId),
+    index('api_key_hash_idx').on(t.keyHash),
+  ],
 );
 
 export const ZSelectApiKeySchema = createSelectSchema(apiKeys);

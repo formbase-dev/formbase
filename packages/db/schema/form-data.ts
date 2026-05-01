@@ -22,10 +22,10 @@ export const formDatas = sqliteTable(
       .default(false)
       .notNull(),
   },
-  (t) => ({
-    formIdx: index('form_idx').on(t.formId),
-    createdAtIdx: index('form_data_created_at_idx').on(t.createdAt),
-  }),
+  (t) => [
+    index('form_idx').on(t.formId),
+    index('form_data_created_at_idx').on(t.createdAt),
+  ],
 );
 
 export const ZSelectFormDataSchema = createSelectSchema(formDatas);

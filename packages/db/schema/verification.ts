@@ -16,7 +16,5 @@ export const verifications = sqliteTable(
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (table) => ({
-    identifierIdx: index('verification_identifier_idx').on(table.identifier),
-  }),
+  (table) => [index('verification_identifier_idx').on(table.identifier)],
 );

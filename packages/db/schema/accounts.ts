@@ -37,11 +37,11 @@ export const accounts = sqliteTable(
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (table) => ({
-    userIdx: index('account_userId_idx').on(table.userId),
-    providerAccountIdx: uniqueIndex('account_provider_account_idx').on(
+  (table) => [
+    index('account_userId_idx').on(table.userId),
+    uniqueIndex('account_provider_account_idx').on(
       table.providerId,
       table.accountId,
     ),
-  }),
+  ],
 );

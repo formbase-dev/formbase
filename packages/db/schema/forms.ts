@@ -39,10 +39,10 @@ export const forms = sqliteTable(
     defaultSubmissionEmail: text('default_submission_email'),
     honeypotField: text('honeypot_field').default('_gotcha').notNull(),
   },
-  (t) => ({
-    userIdx: index('form_user_idx').on(t.userId),
-    createdAtIdx: index('form_created_at_idx').on(t.createdAt),
-  }),
+  (t) => [
+    index('form_user_idx').on(t.userId),
+    index('form_created_at_idx').on(t.createdAt),
+  ],
 );
 
 export const ZSelectFormSchema = createSelectSchema(forms);

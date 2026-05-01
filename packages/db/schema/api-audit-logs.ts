@@ -23,11 +23,11 @@ export const apiAuditLogs = sqliteTable(
       .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
       .notNull(),
   },
-  (t) => ({
-    apiKeyIdx: index('audit_api_key_idx').on(t.apiKeyId),
-    userIdx: index('audit_user_idx').on(t.userId),
-    createdAtIdx: index('audit_created_at_idx').on(t.createdAt),
-  }),
+  (t) => [
+    index('audit_api_key_idx').on(t.apiKeyId),
+    index('audit_user_idx').on(t.userId),
+    index('audit_created_at_idx').on(t.createdAt),
+  ],
 );
 
 export const ZSelectApiAuditLogSchema = createSelectSchema(apiAuditLogs);
