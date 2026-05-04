@@ -8,8 +8,6 @@ import { toast } from 'sonner';
 
 import { LoadingButton } from '~/components/loading-button';
 
-import { revalidateFromClient } from '../../_actions/revalidateDashboard';
-
 type SendFormSubmissionButton = {
   formId: string | null;
 };
@@ -31,7 +29,6 @@ export default function SendFormSubmissionButton({
 
       toast.success('Form submission sent!');
 
-      void revalidateFromClient(`/form/${formId}`);
       router.push(`/form/${formId}`);
     });
   };

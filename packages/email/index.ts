@@ -1,8 +1,5 @@
 import type { TransportOptions } from 'nodemailer';
 
-import { ResendTransport } from '@documenso/nodemailer-resend';
-import { createTransport } from 'nodemailer';
-
 import { env } from '@formbase/env';
 
 export type MessageInfo = {
@@ -11,7 +8,18 @@ export type MessageInfo = {
   body: string;
 };
 
-const createSmtpTransport = () => {
+type MailTransporter = {
+  sendMail: (mailOptions: {
+    from: string;
+    html: string;
+    subject: string;
+    to: string;
+  }) => Promise<unknown>;
+};
+
+const from = '"Formbase" <noreply@formbase.dev>';
+
+const createSmtpTransport = async (): Promise<MailTransporter> => {
   if (!env.SMTP_HOST || !env.SMTP_PORT) {
     throw new Error('Missing SMTP_HOST or SMTP_PORT');
   }
@@ -32,17 +40,18 @@ const createSmtpTransport = () => {
         }
       : {}),
   };
+  const { createTransport } = await import('nodemailer');
 
   return createTransport(smtpConfig as TransportOptions);
 };
 
-let cachedTransporter: ReturnType<typeof createTransport> | null = null;
+let cachedTransporter: MailTransporter | null = null;
 
-const getTransporter = () => {
+const getTransporter = async () => {
   if (cachedTransporter) return cachedTransporter;
 
-  // Use noop transport in test environment
   if (env.NODE_ENV === 'test') {
+    const { createTransport } = await import('nodemailer');
     cachedTransporter = createTransport({
       name: 'noop',
       version: '1.0.0',
@@ -60,19 +69,6 @@ const getTransporter = () => {
     return cachedTransporter;
   }
 
-  if (env.SMTP_TRANSPORT === 'resend') {
-    if (!env.RESEND_API_KEY) {
-      throw new Error('Missing RESEND_API_KEY');
-    }
-
-    cachedTransporter = createTransport(
-      ResendTransport.makeTransport({
-        apiKey: env.RESEND_API_KEY,
-      }),
-    );
-    return cachedTransporter;
-  }
-
   const hasSmtpConfig =
     env.SMTP_TRANSPORT === 'smtp' ||
     !!env.SMTP_HOST ||
@@ -86,14 +82,60 @@ const getTransporter = () => {
     );
   }
 
-  cachedTransporter = createSmtpTransport();
+  cachedTransporter = await createSmtpTransport();
   return cachedTransporter;
 };
 
-export const sendMail = async ({ to, subject, body }: MessageInfo) => {
-  const transporter = getTransporter();
+const sendResendMail = async ({
+  to,
+  subject,
+  body,
+}: MessageInfo): Promise<unknown> => {
+  if (!env.RESEND_API_KEY) {
+    throw new Error('Missing RESEND_API_KEY');
+  }
+
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${env.RESEND_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from,
+      to,
+      subject,
+      html: body,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorBody = (await response.json().catch(() => null)) as {
+      message?: unknown;
+    } | null;
+    const message =
+      typeof errorBody?.message === 'string'
+        ? errorBody.message
+        : `Resend email request failed with status ${response.status}`;
+
+    throw new Error(message);
+  }
+
+  return response.json();
+};
+
+export const sendMail = async ({
+  to,
+  subject,
+  body,
+}: MessageInfo): Promise<unknown> => {
+  if (env.SMTP_TRANSPORT === 'resend') {
+    return sendResendMail({ to, subject, body });
+  }
+
+  const transporter = await getTransporter();
   const mailOptions = {
-    from: '"Formbase" <noreply@formbase.dev>',
+    from,
     to,
     subject,
     html: body,

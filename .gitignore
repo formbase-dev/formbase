@@ -85,6 +85,7 @@ web_modules/
 
 # Next.js build output
 .next
+.open-next
 next-env.d.ts
 out
 
@@ -110,6 +111,7 @@ dist
 
 # Serverless directories
 .serverless/
+.wrangler/
 
 # FuseBox cache
 .fusebox/

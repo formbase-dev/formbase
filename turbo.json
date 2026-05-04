@@ -35,9 +35,12 @@
         "STORAGE_ENDPOINT",
         "STORAGE_PORT",
         "STORAGE_USESSL",
+        "STORAGE_FORCE_PATH_STYLE",
         "STORAGE_ACCESS_KEY",
         "STORAGE_SECRET_KEY",
         "STORAGE_BUCKET",
+        "STORAGE_REGION",
+        "CRON_SECRET",
         "VERCEL_URL",
         "PORT"
       ],
@@ -67,9 +70,12 @@
         "STORAGE_ENDPOINT",
         "STORAGE_PORT",
         "STORAGE_USESSL",
+        "STORAGE_FORCE_PATH_STYLE",
         "STORAGE_ACCESS_KEY",
         "STORAGE_SECRET_KEY",
         "STORAGE_BUCKET",
+        "STORAGE_REGION",
+        "CRON_SECRET",
         "VERCEL_URL",
         "PORT"
       ]
@@ -97,9 +103,12 @@
         "STORAGE_ENDPOINT",
         "STORAGE_PORT",
         "STORAGE_USESSL",
+        "STORAGE_FORCE_PATH_STYLE",
         "STORAGE_ACCESS_KEY",
         "STORAGE_SECRET_KEY",
         "STORAGE_BUCKET",
+        "STORAGE_REGION",
+        "CRON_SECRET",
         "VERCEL_URL",
         "PORT"
       ]
@@ -154,9 +163,12 @@
         "STORAGE_ENDPOINT",
         "STORAGE_PORT",
         "STORAGE_USESSL",
+        "STORAGE_FORCE_PATH_STYLE",
         "STORAGE_ACCESS_KEY",
         "STORAGE_SECRET_KEY",
         "STORAGE_BUCKET",
+        "STORAGE_REGION",
+        "CRON_SECRET",
         "VERCEL_URL",
         "PORT"
       ]

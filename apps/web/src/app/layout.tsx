@@ -7,7 +7,6 @@ import type { Metadata, Viewport } from 'next';
 
 import { Toaster } from 'sonner';
 
-import { env } from '@formbase/env';
 import { TooltipProvider } from '@formbase/ui/primitives/tooltip';
 import { cn } from '@formbase/ui/utils/cn';
 
@@ -18,6 +17,8 @@ const fontSans = FontSans({
   subsets: ['latin'],
   variable: '--font-sans',
 });
+
+const umamiTrackingId = process.env['UMAMI_TRACKING_ID'];
 
 export const metadata: Metadata = {
   title: {
@@ -59,11 +60,11 @@ export default function RootLayout({
           </TRPCReactProvider>
           <Toaster />
         </ThemeProvider>
-        {env.UMAMI_TRACKING_ID && (
+        {umamiTrackingId && (
           <Script
             async
             src="https://analytics.duncan.land/script.js"
-            data-website-id={env.UMAMI_TRACKING_ID}
+            data-website-id={umamiTrackingId}
           />
         )}
       </body>

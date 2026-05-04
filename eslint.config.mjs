@@ -1,4 +1,5 @@
 // @ts-nocheck
+
 import base from './packages/config/eslint/base.js';
 import next from './packages/config/eslint/next.js';
 import react from './packages/config/eslint/react.js';
@@ -28,6 +29,7 @@ export default [
       '**/node_modules/**',
       '**/dist/**',
       '**/.next/**',
+      '**/.open-next/**',
       '**/.turbo/**',
       '**/coverage/**',
       '**/test-results/**',

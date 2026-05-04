@@ -1,3 +1,22 @@
+import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare';
+
+initOpenNextCloudflareForDev();
+
+const appUrl = process.env.NEXT_PUBLIC_APP_URL
+  ? new URL(process.env.NEXT_PUBLIC_APP_URL)
+  : null;
+
+const appImageRemotePatterns = appUrl
+  ? [
+      {
+        protocol: appUrl.protocol.replace(':', ''),
+        hostname: appUrl.hostname,
+        port: appUrl.port,
+        pathname: '/api/files/**',
+      },
+    ]
+  : [];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -11,6 +30,7 @@ const nextConfig = {
         protocol: 'http',
         hostname: 'localhost',
       },
+      ...appImageRemotePatterns,
     ],
   },
   transpilePackages: [
@@ -20,9 +40,14 @@ const nextConfig = {
     '@formbase/env',
     '@formbase/ui',
     '@formbase/utils',
-    "@formbase/tailwind",
+    '@formbase/tailwind',
   ],
-  serverExternalPackages: ['libsql', '@libsql/client'],
+  serverExternalPackages: [
+    'libsql',
+    '@libsql/client',
+    '@libsql/isomorphic-fetch',
+    '@libsql/isomorphic-ws',
+  ],
   typescript: {
     ignoreBuildErrors: true,
   },

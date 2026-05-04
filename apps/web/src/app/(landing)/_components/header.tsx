@@ -1,19 +1,16 @@
 import Link from 'next/link';
 
-import { type User } from '@formbase/auth';
-import { env } from '@formbase/env';
-
 import { Logo } from '../../(auth)/_components/logo';
 import { MobileNavigation } from './mobile-navigation';
 
 const routes = [{ name: 'Docs', href: 'https://docs.formbase.dev' }] as const;
 
 type LandingHeaderProps = {
-  user: User | null;
+  isLoggedIn?: boolean;
 };
 
-export const Header = ({ user }: LandingHeaderProps) => {
-  const isLoggedIn = user !== null;
+export const Header = ({ isLoggedIn = false }: LandingHeaderProps) => {
+  const showAuthLinks = process.env['ALLOW_SIGNIN_SIGNUP']?.trim() !== 'false';
 
   return (
     <header>
@@ -46,7 +43,7 @@ export const Header = ({ user }: LandingHeaderProps) => {
                 </div>
 
                 <>
-                  {env.ALLOW_SIGNIN_SIGNUP === 'false' ? null : (
+                  {showAuthLinks ? (
                     <>
                       {isLoggedIn ? (
                         <Link
@@ -72,7 +69,7 @@ export const Header = ({ user }: LandingHeaderProps) => {
                         </div>
                       )}
                     </>
-                  )}
+                  ) : null}
                 </>
               </div>
 
