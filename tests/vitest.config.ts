@@ -1,11 +1,11 @@
 import path from 'path';
+
 import { defineConfig } from 'vitest/config';
 
 process.env['SKIP_ENV_VALIDATION'] = 'true';
 process.env.NODE_ENV = 'test';
 process.env['DATABASE_URL'] = 'file::memory:?cache=shared';
 process.env['BETTER_AUTH_SECRET'] = 'test-secret-minimum-32-characters-long-for-testing';
-process.env['NEXT_PUBLIC_APP_URL'] = 'http://localhost:3000';
 process.env['ALLOW_SIGNIN_SIGNUP'] = 'true';
 
 export default defineConfig({

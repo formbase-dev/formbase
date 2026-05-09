@@ -1,15 +1,14 @@
 import { generateOpenApiDocument } from 'trpc-to-openapi';
 
 import { apiV1Router } from '@formbase/api/routers/api-v1';
-import { env } from '@formbase/env';
 
 export const dynamic = 'force-dynamic';
 
-export function GET() {
+export function GET(request: Request) {
   const openApiDocument = generateOpenApiDocument(apiV1Router, {
     title: 'Formbase API',
     version: '1.0.0',
-    baseUrl: `${env.NEXT_PUBLIC_APP_URL}/api/v1`,
+    baseUrl: `${new URL(request.url).origin}/api/v1`,
     description: 'Public REST API for managing forms and submissions.',
     securitySchemes: {
       bearerAuth: {

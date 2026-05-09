@@ -1,3 +1,6 @@
+import type { Client } from '@libsql/client';
+import type { LibSQLDatabase } from 'drizzle-orm/libsql';
+
 import { createClient } from '@libsql/client';
 import {
   and,
@@ -17,10 +20,47 @@ import { drizzle } from 'drizzle-orm/libsql';
 import { getDatabaseCredentials } from './credentials';
 import * as schema from './schema';
 
-export const queryClient = createClient(getDatabaseCredentials());
+let queryClientInstance: Client | undefined;
 
-export const db = drizzle(queryClient, {
-  schema: schema,
+const getQueryClient = () => {
+  queryClientInstance ??= createClient(getDatabaseCredentials());
+  return queryClientInstance;
+};
+
+export const queryClient = new Proxy({} as Client, {
+  get(_target, property) {
+    const client = getQueryClient();
+    const value = Reflect.get(client, property);
+    return typeof value === 'function' ? value.bind(client) : value;
+  },
+  set(_target, property, value) {
+    return Reflect.set(getQueryClient(), property, value);
+  },
+});
+
+const createDb = () =>
+  drizzle(queryClient, {
+    schema: schema,
+  });
+
+type Database = LibSQLDatabase<typeof schema>;
+
+let dbInstance: Database | undefined;
+
+const getDb = () => {
+  dbInstance ??= createDb();
+  return dbInstance;
+};
+
+export const db = new Proxy({} as Database, {
+  get(_target, property) {
+    const database = getDb();
+    const value = Reflect.get(database, property);
+    return typeof value === 'function' ? value.bind(database) : value;
+  },
+  set(_target, property, value) {
+    return Reflect.set(getDb(), property, value);
+  },
 });
 
 export const drizzlePrimitives = {

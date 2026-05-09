@@ -1,7 +1,6 @@
 import { userAgent } from 'next/server';
 
 import { type RouterOutputs } from '@formbase/api';
-import { env } from '@formbase/env';
 
 import { sendMail } from '~/lib/email/mailer';
 import { renderNewSubmissionEmail } from '~/lib/email/templates/new-submission';
@@ -64,6 +63,7 @@ async function getFormData(request: Request): Promise<FormDataResult> {
 async function processFileUploads(
   formData: Record<string, Blob | string | undefined>,
   formDataFromRequest: FormData,
+  requestOrigin: string,
 ) {
   const fileKeys = Object.keys(formData).filter(
     (key) => formData[key] instanceof Blob,
@@ -71,7 +71,7 @@ async function processFileUploads(
 
   for (const key of fileKeys) {
     const file = formDataFromRequest.get(key) as File;
-    const fileUrl = await uploadFileFromBlob({ file });
+    const fileUrl = await uploadFileFromBlob({ file, origin: requestOrigin });
     assignFileOrImage({ formData, key, fileUrl });
   }
 }
@@ -103,6 +103,7 @@ export async function POST(
     const { id } = await params;
 
     const formId = id;
+    const requestOrigin = new URL(request.url).origin;
     const form = await api.form.getFormById({ formId });
     if (!form) {
       return new Response('Form not found', {
@@ -117,7 +118,11 @@ export async function POST(
     const { data: formData } = formDataResult;
 
     if (formDataResult.source === 'formData') {
-      await processFileUploads(formData, formDataResult.rawFormData);
+      await processFileUploads(
+        formData,
+        formDataResult.rawFormData,
+        requestOrigin,
+      );
     }
 
     const honeypotField = form.honeypotField;
@@ -158,7 +163,7 @@ export async function POST(
     return new Response(null, {
       status: 303,
       headers: {
-        Location: `${env.NEXT_PUBLIC_APP_URL}/s/${formId}`,
+        Location: new URL(`/s/${formId}`, requestOrigin).toString(),
         ...CORS_HEADERS,
       },
     });

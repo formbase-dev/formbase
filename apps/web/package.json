@@ -4,13 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "next build",
-    "build:worker": "opennextjs-cloudflare build",
+    "build": "SKIP_ENV_VALIDATION=true next build",
+    "build:worker": "SKIP_ENV_VALIDATION=true opennextjs-cloudflare build",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
-    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "deploy": "SKIP_ENV_VALIDATION=true opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "dev": "next dev -p 3000",
     "lint": "eslint . --cache --max-warnings 0",
-    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "preview": "SKIP_ENV_VALIDATION=true opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "start": "next start",
     "typecheck": "tsc --noEmit --tsBuildInfoFile .tsbuildinfo"
   },

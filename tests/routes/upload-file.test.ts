@@ -81,9 +81,7 @@ describe('upload-file storage signing', () => {
     const { uploadFile } = await import('~/lib/upload-file');
     const fileUrl = await uploadFile(new Blob(['<svg />']), 'image/svg+xml');
 
-    expect(fileUrl).toMatch(
-      /^http:\/\/localhost:3000\/api\/files\/[0-9A-Za-z]{15}\.svg$/,
-    );
+    expect(fileUrl).toMatch(/^\/api\/files\/[0-9A-Za-z]{15}\.svg$/);
 
     const [url, init] = fetch.mock.calls[0] as [string, RequestInit];
 
@@ -91,5 +89,21 @@ describe('upload-file storage signing', () => {
       'content-type;host',
     );
     expect(init.headers).toEqual({ 'Content-Type': 'image/svg+xml' });
+  });
+
+  it('creates absolute file URLs from a request origin', async () => {
+    const fetch = vi.fn(async () => new Response(null, { status: 200 }));
+    vi.stubGlobal('fetch', fetch);
+
+    const { uploadFile } = await import('~/lib/upload-file');
+    const fileUrl = await uploadFile(
+      new Blob(['<svg />']),
+      'image/svg+xml',
+      'https://forms.example',
+    );
+
+    expect(fileUrl).toMatch(
+      /^https:\/\/forms\.example\/api\/files\/[0-9A-Za-z]{15}\.svg$/,
+    );
   });
 });

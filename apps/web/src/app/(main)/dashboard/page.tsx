@@ -1,8 +1,6 @@
 import * as React from 'react';
 import { type Metadata } from 'next';
 
-import { env } from '@formbase/env';
-
 import { api } from '~/lib/trpc/server';
 
 import { Forms } from './_components/forms';
@@ -10,7 +8,6 @@ import { CreateFormDialog } from './_components/new-form-dialog';
 import { FormsSkeleton } from './_components/posts-skeleton';
 
 export const metadata: Metadata = {
-  metadataBase: new URL(env.NEXT_PUBLIC_APP_URL),
   title: 'Forms',
   description: 'Manage your form endpoints',
 };
