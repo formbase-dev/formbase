@@ -10,9 +10,9 @@ async function LandingPageLayout({ children }: { children: ReactNode }) {
   const databaseUrl = process.env['DATABASE_URL'];
   const hasSessionRuntimeEnv =
     !!databaseUrl &&
-    (!databaseUrl.startsWith('libsql://') || !!process.env['TURSO_AUTH_TOKEN']) &&
+    (!databaseUrl.startsWith('libsql://') ||
+      !!process.env['TURSO_AUTH_TOKEN']) &&
     !!process.env['BETTER_AUTH_SECRET'] &&
-    !!process.env['NEXT_PUBLIC_APP_URL'] &&
     !!process.env['ALLOW_SIGNIN_SIGNUP'];
   let isLoggedIn = false;
 

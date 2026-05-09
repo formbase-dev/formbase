@@ -13,7 +13,6 @@ const booleanFromString = z.preprocess((value) => {
 export const env = createEnv({
   shared: {
     NODE_ENV: z.enum(['development', 'test', 'production']).optional(),
-    NEXT_PUBLIC_APP_URL: z.string().url(),
   },
   server: {
     PORT: z.coerce.number().default(3000),

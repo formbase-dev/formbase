@@ -9,7 +9,8 @@ const cache =
     : <T extends (...args: unknown[]) => unknown>(fn: T) => fn;
 
 export const getSession = cache(async () => {
-  return auth.api.getSession({ headers: await headers() });
+  const requestHeaders = await headers();
+  return auth.api.getSession({ headers: requestHeaders });
 });
 
 export async function requireAuth() {

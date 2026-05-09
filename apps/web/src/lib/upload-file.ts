@@ -39,9 +39,15 @@ const toHex = (buffer: ArrayBuffer) =>
     .join('');
 
 async function hmac(key: ArrayBuffer | Uint8Array | string, value: string) {
+  const keyData =
+    typeof key === 'string'
+      ? encoder.encode(key)
+      : key instanceof Uint8Array
+        ? new Uint8Array(key).buffer
+        : key;
   const cryptoKey = await crypto.subtle.importKey(
     'raw',
-    typeof key === 'string' ? encoder.encode(key) : key,
+    keyData,
     { name: 'HMAC', hash: 'SHA-256' },
     false,
     ['sign'],
@@ -162,8 +168,10 @@ const createStorageUrl = (config: StorageConfig, key?: string) => {
   );
 };
 
-const createFileUrl = (key: string) =>
-  new URL(`/api/files/${encodePath(key)}`, env.NEXT_PUBLIC_APP_URL).toString();
+const createFileUrl = (key: string, origin?: string) => {
+  const path = `/api/files/${encodePath(key)}`;
+  return origin ? new URL(path, origin).toString() : path;
+};
 
 async function createPresignedUrl({
   config,
@@ -244,8 +252,17 @@ async function sendStorageRequest({
   key?: string;
   method: 'PUT';
 }) {
-  const url = await createPresignedUrl({ config, headers, key, method });
-  return fetch(url, { body, headers, method });
+  const url = await createPresignedUrl({
+    config,
+    method,
+    ...(headers ? { headers } : {}),
+    ...(key ? { key } : {}),
+  });
+  return fetch(url, {
+    method,
+    ...(body === undefined ? {} : { body }),
+    ...(headers ? { headers } : {}),
+  });
 }
 
 const getFileExtension = (mimetype: string) => {
@@ -253,7 +270,11 @@ const getFileExtension = (mimetype: string) => {
   return subtype?.split('+').at(0) ?? 'bin';
 };
 
-export async function uploadFile(file: BodyInit, mimetype: string) {
+export async function uploadFile(
+  file: BodyInit,
+  mimetype: string,
+  origin?: string,
+) {
   const config = getStorageConfig();
   const name = `${generateId(15)}.${getFileExtension(mimetype)}`;
   const contentType = mimetype || 'application/octet-stream';
@@ -272,15 +293,17 @@ export async function uploadFile(file: BodyInit, mimetype: string) {
     throw new Error(`Storage upload failed with status ${response.status}`);
   }
 
-  return createFileUrl(name);
+  return createFileUrl(name, origin);
 }
 
 export async function uploadFileFromBlob({
   file,
+  origin,
 }: {
   file: Blob;
+  origin?: string;
 }): Promise<string> {
-  return uploadFile(file, file.type);
+  return uploadFile(file, file.type, origin);
 }
 
 export function assignFileOrImage({

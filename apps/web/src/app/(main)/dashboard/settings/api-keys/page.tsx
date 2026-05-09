@@ -3,13 +3,11 @@ import { redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 
 import { getSession } from '@formbase/auth/server';
-import { env } from '@formbase/env';
 import { Separator } from '@formbase/ui/primitives/separator';
 
 import { ApiKeysSection } from './api-keys-section';
 
 export const metadata: Metadata = {
-  metadataBase: new URL(env.NEXT_PUBLIC_APP_URL),
   title: 'API Keys | Formbase',
   description: 'Manage your API keys for programmatic access',
 };

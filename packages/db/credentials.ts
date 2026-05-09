@@ -7,6 +7,9 @@ type DatabaseCredentials = {
 
 export const getDatabaseCredentials = (): DatabaseCredentials => {
   const databaseUrl = env.DATABASE_URL;
+  if (!databaseUrl) {
+    throw new Error('DATABASE_URL is required');
+  }
 
   if (!databaseUrl.startsWith('libsql://')) {
     return { url: databaseUrl };
