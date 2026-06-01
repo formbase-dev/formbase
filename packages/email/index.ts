@@ -40,6 +40,7 @@ const createSmtpTransport = async (): Promise<MailTransporter> => {
         }
       : {}),
   };
+  // Dynamic import keeps Node-only nodemailer out of Cloudflare email transport bundles.
   const { createTransport } = await import('nodemailer');
 
   return createTransport(smtpConfig as TransportOptions);
@@ -51,6 +52,7 @@ const getTransporter = async () => {
   if (cachedTransporter) return cachedTransporter;
 
   if (env.NODE_ENV === 'test') {
+    // Dynamic import keeps Node-only nodemailer out of Cloudflare email transport bundles.
     const { createTransport } = await import('nodemailer');
     cachedTransporter = createTransport({
       name: 'noop',
@@ -78,7 +80,7 @@ const getTransporter = async () => {
 
   if (!hasSmtpConfig) {
     throw new Error(
-      'Email transport not configured. Set SMTP_TRANSPORT to resend or smtp.',
+      'Email transport not configured. Set SMTP_TRANSPORT to cloudflare or smtp.',
     );
   }
 
@@ -86,42 +88,50 @@ const getTransporter = async () => {
   return cachedTransporter;
 };
 
-const sendResendMail = async ({
+const sendCloudflareMail = async ({
   to,
   subject,
   body,
 }: MessageInfo): Promise<unknown> => {
-  if (!env.RESEND_API_KEY) {
-    throw new Error('Missing RESEND_API_KEY');
+  const apiToken = env.CLOUDFLARE_API_TOKEN;
+  const accountId = env.CLOUDFLARE_ACCOUNT_ID;
+
+  if (!apiToken || !accountId) {
+    throw new Error('Missing CLOUDFLARE_API_TOKEN or CLOUDFLARE_ACCOUNT_ID');
   }
 
-  const response = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${env.RESEND_API_KEY}`,
-      'Content-Type': 'application/json',
+  const response = await fetch(
+    `https://api.cloudflare.com/client/v4/accounts/${accountId}/email/sending/send`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: env.EMAIL_FROM ?? from,
+        to,
+        subject,
+        html: body,
+      }),
     },
-    body: JSON.stringify({
-      from,
-      to,
-      subject,
-      html: body,
-    }),
-  });
+  );
+  const result = (await response.json().catch(() => null)) as {
+    success?: boolean;
+    errors?: Array<{ message?: unknown }>;
+  } | null;
 
-  if (!response.ok) {
-    const errorBody = (await response.json().catch(() => null)) as {
-      message?: unknown;
-    } | null;
+  if (!response.ok || result?.success !== true) {
+    const errorMessage = result?.errors?.[0]?.message;
     const message =
-      typeof errorBody?.message === 'string'
-        ? errorBody.message
-        : `Resend email request failed with status ${response.status}`;
+      typeof errorMessage === 'string'
+        ? errorMessage
+        : `Cloudflare email request failed with status ${response.status}`;
 
     throw new Error(message);
   }
 
-  return response.json();
+  return result;
 };
 
 export const sendMail = async ({
@@ -129,8 +139,8 @@ export const sendMail = async ({
   subject,
   body,
 }: MessageInfo): Promise<unknown> => {
-  if (env.SMTP_TRANSPORT === 'resend') {
-    return sendResendMail({ to, subject, body });
+  if (env.SMTP_TRANSPORT === 'cloudflare') {
+    return sendCloudflareMail({ to, subject, body });
   }
 
   const transporter = await getTransporter();
