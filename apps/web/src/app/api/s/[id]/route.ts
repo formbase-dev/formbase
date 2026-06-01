@@ -1,4 +1,4 @@
-import { userAgent } from 'next/server';
+import { after, userAgent } from 'next/server';
 
 import { type RouterOutputs } from '@formbase/api';
 
@@ -142,7 +142,11 @@ export async function POST(
     });
 
     if (!spamResult.isSpam) {
-      void handleEmailNotifications(form, cleanedFormData);
+      after(() =>
+        handleEmailNotifications(form, cleanedFormData).catch((error) => {
+          console.error('Failed to send submission notification email', error);
+        }),
+      );
     }
     const { browser } = userAgent(request);
 
