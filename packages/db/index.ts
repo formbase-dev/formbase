@@ -30,8 +30,10 @@ const getQueryClient = () => {
 export const queryClient = new Proxy({} as Client, {
   get(_target, property) {
     const client = getQueryClient();
-    const value = Reflect.get(client, property);
-    return typeof value === 'function' ? value.bind(client) : value;
+    const value: unknown = Reflect.get(client, property);
+    return typeof value === 'function'
+      ? (value as (...args: unknown[]) => unknown).bind(client)
+      : value;
   },
   set(_target, property, value) {
     return Reflect.set(getQueryClient(), property, value);
@@ -55,8 +57,10 @@ const getDb = () => {
 export const db = new Proxy({} as Database, {
   get(_target, property) {
     const database = getDb();
-    const value = Reflect.get(database, property);
-    return typeof value === 'function' ? value.bind(database) : value;
+    const value: unknown = Reflect.get(database, property);
+    return typeof value === 'function'
+      ? (value as (...args: unknown[]) => unknown).bind(database)
+      : value;
   },
   set(_target, property, value) {
     return Reflect.set(getDb(), property, value);

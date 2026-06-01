@@ -78,8 +78,13 @@ const getAuth = () => {
 export const auth = new Proxy({} as Auth, {
   get(_target, property) {
     const authClient = getAuth();
-    const value = Reflect.get(authClient, property);
-    return typeof value === 'function' ? value.bind(authClient) : value;
+    const value: unknown = Reflect.get(authClient, property);
+    return typeof value === 'function'
+      ? (value as (...args: unknown[]) => unknown).bind(authClient)
+      : value;
+  },
+  has(_target, property) {
+    return Reflect.has(getAuth(), property);
   },
 });
 
