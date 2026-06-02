@@ -35,6 +35,8 @@ export default [
       '**/test-results/**',
       '**/playwright-report/**',
       'apps/web/next-env.d.ts',
+      'apps/web/cloudflare-env.d.ts',
+      'apps/web/worker.ts',
       'packages/core/.tsup/**',
     ],
   },

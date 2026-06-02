@@ -1,3 +1,4 @@
+import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { after, userAgent } from 'next/server';
 
 import { type RouterOutputs } from '@formbase/api';
@@ -7,6 +8,7 @@ import { renderNewSubmissionEmail } from '~/lib/email/templates/new-submission';
 import { checkForSpam, stripHoneypotField } from '~/lib/spam-detection';
 import { api } from '~/lib/trpc/server';
 import { assignFileOrImage, uploadFileFromBlob } from '~/lib/upload-file';
+import { enqueueWebhook } from '~/lib/webhooks/producer';
 
 type FormDataResult =
   | {
@@ -133,7 +135,7 @@ export async function POST(
     const formKeys = form.keys;
     const updatedKeys = [...new Set([...formKeys, ...formDataKeys])];
 
-    await api.formData.setFormData({
+    const { id: formDataId } = await api.formData.setFormData({
       data: cleanedFormData,
       formId,
       keys: updatedKeys,
@@ -145,6 +147,21 @@ export async function POST(
       after(() =>
         handleEmailNotifications(form, cleanedFormData).catch((error) => {
           console.error('Failed to send submission notification email', error);
+        }),
+      );
+    }
+
+    if (!spamResult.isSpam && form.enableWebhook && form.webhookUrl) {
+      const { env } = getCloudflareContext();
+      const queue = env.WEBHOOK_QUEUE;
+      const webhookUrl = form.webhookUrl;
+      after(() =>
+        enqueueWebhook(queue, {
+          formId,
+          formDataId,
+          webhookUrl,
+        }).catch((error: unknown) => {
+          console.error('Failed to enqueue webhook', error);
         }),
       );
     }

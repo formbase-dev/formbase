@@ -38,6 +38,13 @@ export const forms = sqliteTable(
       .notNull(),
     defaultSubmissionEmail: text('default_submission_email'),
     honeypotField: text('honeypot_field').default('_gotcha').notNull(),
+    enableWebhook: integer('enable_webhook', {
+      mode: 'boolean',
+    })
+      .default(false)
+      .notNull(),
+    webhookUrl: text('webhook_url'),
+    webhookSecret: text('webhook_secret'),
   },
   (t) => [
     index('form_user_idx').on(t.userId),

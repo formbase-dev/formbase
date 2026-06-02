@@ -1,6 +1,7 @@
 {
   "extends": ["@formbase/tsconfig/next.json"],
   "compilerOptions": {
+    "checkJs": false,
     "paths": {
       "~/*": ["./src/*"]
     }

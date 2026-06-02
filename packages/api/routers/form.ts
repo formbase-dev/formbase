@@ -1,8 +1,17 @@
+import { TRPCError } from "@trpc/server";
+
 import { drizzlePrimitives } from "@formbase/db";
 import { formDatas, forms, onboardingForms } from "@formbase/db/schema";
 import { generateId } from "@formbase/utils/generate-id";
+import { isValidWebhookUrl } from "@formbase/utils/webhook";
 import { z } from "zod";
 
+import {
+  buildMockPayload,
+  buildWebhookPayload,
+  createDeliveryLogRow,
+  listWebhookDeliveries,
+} from "../lib/webhook";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { parseJsonArray, serializeJson } from "../utils/json";
 import { assertFormOwnership } from "./form-ownership";
@@ -127,10 +136,26 @@ export const formRouter = createTRPCRouter({
         returnUrl: z.string().optional(),
         defaultSubmissionEmail: z.string().optional(),
         honeypotField: z.string().optional(),
+        enableWebhook: z.boolean().optional(),
+        webhookUrl: z
+          .string()
+          .url()
+          .refine(isValidWebhookUrl, {
+            message:
+              "Webhook URL must use HTTPS (localhost allowed only in development)",
+          })
+          .optional()
+          .nullable(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       const form = await assertFormOwnership(ctx, input.id);
+
+      const enablingWebhook =
+        input.enableWebhook === true && !form.webhookSecret;
+      const webhookSecret = enablingWebhook
+        ? (crypto.randomUUID() + crypto.randomUUID()).replace(/-/g, "")
+        : undefined;
 
       await ctx.db
         .update(forms)
@@ -145,6 +170,10 @@ export const formRouter = createTRPCRouter({
           defaultSubmissionEmail:
             input.defaultSubmissionEmail ?? form.defaultSubmissionEmail,
           honeypotField: input.honeypotField ?? form.honeypotField,
+          enableWebhook: input.enableWebhook ?? form.enableWebhook,
+          webhookUrl:
+            input.webhookUrl !== undefined ? input.webhookUrl : form.webhookUrl,
+          ...(webhookSecret ? { webhookSecret } : {}),
         })
         .where(eq(forms.id, input.id));
     }),
@@ -245,6 +274,23 @@ export const formRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const form = await ctx.db.query.forms.findFirst({
         where: (table) => eq(table.id, input.formId),
+        columns: {
+          id: true,
+          userId: true,
+          title: true,
+          description: true,
+          createdAt: true,
+          updatedAt: true,
+          returnUrl: true,
+          enableEmailNotifications: true,
+          keys: true,
+          enableSubmissions: true,
+          enableRetention: true,
+          defaultSubmissionEmail: true,
+          honeypotField: true,
+          enableWebhook: true,
+          webhookUrl: true,
+        },
       });
 
       if (!form) return null;
@@ -253,5 +299,57 @@ export const formRouter = createTRPCRouter({
         ...form,
         keys: parseJsonArray(form.keys),
       };
+    }),
+
+  testWebhook: protectedProcedure
+    .input(z.object({ formId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const form = await assertFormOwnership(ctx, input.formId);
+
+      if (!form.enableWebhook || !form.webhookUrl) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Webhook is not enabled or URL is not configured",
+        });
+      }
+
+      if (!ctx.webhookQueue) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Webhook queue unavailable",
+        });
+      }
+
+      const latest = await ctx.db.query.formDatas.findFirst({
+        where: (table) => eq(table.formId, form.id),
+        orderBy: (table, { desc }) => desc(table.createdAt),
+      });
+
+      const payload =
+        (latest && (await buildWebhookPayload(ctx.db, form.id, latest.id))) ??
+        buildMockPayload({ id: form.id, title: form.title });
+
+      const deliveryLogId = await createDeliveryLogRow(ctx.db, {
+        formId: form.id,
+        formDataId: latest?.id ?? null,
+        webhookUrl: form.webhookUrl,
+        payload,
+      });
+
+      await ctx.webhookQueue.send({ deliveryLogId, webhookUrl: form.webhookUrl });
+
+      return { deliveryLogId };
+    }),
+
+  listDeliveries: protectedProcedure
+    .input(
+      z.object({
+        formId: z.string(),
+        limit: z.number().min(1).max(100).optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      await assertFormOwnership(ctx, input.formId);
+      return listWebhookDeliveries(ctx.db, input.formId, input.limit ?? 20);
     }),
 });

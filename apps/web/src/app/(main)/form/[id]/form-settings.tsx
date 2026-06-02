@@ -3,12 +3,14 @@
 import { useRouter } from 'next/navigation';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import { formatDistanceToNow } from 'date-fns';
 import {
   BellRing,
   ExternalLink,
   FolderPen,
   FolderX,
   Shield,
+  Webhook,
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -16,6 +18,7 @@ import { z } from 'zod';
 
 import { type RouterOutputs } from '@formbase/api';
 import { type User } from '@formbase/auth';
+import { Badge } from '@formbase/ui/primitives/badge';
 import {
   Form,
   FormControl,
@@ -27,7 +30,9 @@ import {
 import { Input } from '@formbase/ui/primitives/input';
 import { Label } from '@formbase/ui/primitives/label';
 import { Switch } from '@formbase/ui/primitives/switch';
+import { isValidWebhookUrl } from '@formbase/utils/webhook';
 
+import { CopyButton } from '~/components/copy-button';
 import { LoadingButton } from '~/components/loading-button';
 import { api } from '~/lib/trpc/react';
 
@@ -56,6 +61,18 @@ const defaultSubmissionEmailSchema = z.object({
 
 const honeypotFieldSchema = z.object({
   honeypotField: z.string().min(1).optional(),
+});
+
+const webhookSettingsSchema = z.object({
+  enableWebhook: z.boolean().default(false).optional(),
+  webhookUrl: z
+    .string()
+    .url()
+    .refine(isValidWebhookUrl, {
+      message: 'URL must use HTTPS (localhost allowed for development)',
+    })
+    .optional()
+    .or(z.literal('')),
 });
 
 type FormNameSchema = z.infer<typeof formNameSchema>;
@@ -111,6 +128,13 @@ export function FormSettings({ form, user }: FormSettingsProps) {
       <HoneypotFieldSetting
         formId={form.id}
         honeypotField={form.honeypotField}
+      />
+
+      <WebhookSettings
+        formId={form.id}
+        enableWebhook={form.enableWebhook}
+        webhookUrl={form.webhookUrl ?? ''}
+        webhookSecret={form.webhookSecret ?? null}
       />
 
       <div className="flex flex-row items-center justify-between rounded-lg border p-4">
@@ -595,5 +619,235 @@ const HoneypotFieldSetting = ({
         />
       </form>
     </Form>
+  );
+};
+
+type WebhookSettingsSchema = z.infer<typeof webhookSettingsSchema>;
+
+const WebhookSettings = ({
+  formId,
+  enableWebhook,
+  webhookUrl,
+  webhookSecret,
+}: {
+  formId: string;
+  enableWebhook: boolean;
+  webhookUrl: string;
+  webhookSecret: string | null;
+}) => {
+  const router = useRouter();
+
+  const webhookForm = useForm<WebhookSettingsSchema>({
+    resolver: zodResolver(webhookSettingsSchema),
+    defaultValues: {
+      enableWebhook,
+      webhookUrl,
+    },
+  });
+
+  const watchEnableWebhook = webhookForm.watch('enableWebhook');
+
+  const { mutateAsync: updateWebhookSettings, isPending: isUpdating } =
+    api.form.update.useMutation();
+
+  const { mutateAsync: testWebhook, isPending: isTesting } =
+    api.form.testWebhook.useMutation();
+
+  const { data: deliveries } = api.form.listDeliveries.useQuery(
+    { formId },
+    { enabled: watchEnableWebhook ?? false },
+  );
+
+  async function handleEnableWebhookChange(isChecked: boolean) {
+    webhookForm.setValue('enableWebhook', isChecked);
+
+    try {
+      await updateWebhookSettings({
+        id: formId,
+        enableWebhook: isChecked,
+      });
+
+      toast(
+        isChecked ? 'Webhook has been enabled' : 'Webhook has been disabled',
+        { icon: <Webhook className="h-4 w-4" /> },
+      );
+
+      router.refresh();
+    } catch {
+      toast('Failed to update webhook settings', {
+        description: 'Please try again later',
+        icon: <FolderX className="h-4 w-4" />,
+      });
+    }
+  }
+
+  async function handleWebhookUrlSubmit(data: WebhookSettingsSchema) {
+    try {
+      await updateWebhookSettings({
+        id: formId,
+        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+        webhookUrl: data.webhookUrl || null,
+      });
+
+      toast('Webhook URL has been updated', {
+        icon: <Webhook className="h-4 w-4" />,
+      });
+
+      router.refresh();
+    } catch {
+      toast('Failed to update webhook URL', {
+        description: 'URL must use HTTPS (localhost allowed for development)',
+        icon: <FolderX className="h-4 w-4" />,
+      });
+    }
+  }
+
+  async function handleTestWebhook() {
+    try {
+      await testWebhook({ formId });
+      toast('Test webhook has been queued', {
+        description: 'Check your webhook endpoint for the delivery',
+        icon: <Webhook className="h-4 w-4" />,
+      });
+    } catch {
+      toast('Failed to send test webhook', {
+        description: 'Make sure webhook is enabled and URL is configured',
+        icon: <FolderX className="h-4 w-4" />,
+      });
+    }
+  }
+
+  return (
+    <div className="space-y-4 rounded-lg border p-4">
+      <Form {...webhookForm}>
+        <FormField
+          control={webhookForm.control}
+          name="enableWebhook"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between">
+              <div className="space-y-0.5">
+                <FormLabel className="text-base">Enable Webhook</FormLabel>
+                <FormDescription>
+                  Send an HTTP POST request on every form submission
+                </FormDescription>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value ?? false}
+                  onCheckedChange={handleEnableWebhookChange}
+                  disabled={isUpdating}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+      </Form>
+
+      {watchEnableWebhook && (
+        <>
+          <Form {...webhookForm}>
+            <form onSubmit={webhookForm.handleSubmit(handleWebhookUrlSubmit)}>
+              <FormField
+                control={webhookForm.control}
+                name="webhookUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Webhook URL</FormLabel>
+                    <FormControl>
+                      <div className="flex gap-2">
+                        <Input
+                          className="flex-1"
+                          {...field}
+                          placeholder="https://example.com/webhook"
+                          type="url"
+                        />
+                        <LoadingButton
+                          loading={isUpdating}
+                          type="submit"
+                          variant="default"
+                        >
+                          Save
+                        </LoadingButton>
+                        <LoadingButton
+                          loading={isTesting}
+                          type="button"
+                          variant="outline"
+                          onClick={handleTestWebhook}
+                          disabled={!webhookUrl}
+                        >
+                          Test
+                        </LoadingButton>
+                      </div>
+                    </FormControl>
+                    <FormDescription>
+                      Must use HTTPS (localhost allowed for development)
+                    </FormDescription>
+                  </FormItem>
+                )}
+              />
+            </form>
+          </Form>
+
+          {webhookSecret && (
+            <div className="space-y-0.5">
+              <Label>Signing secret</Label>
+              <div className="flex items-center gap-2 rounded-md border bg-muted px-3 py-2">
+                <code className="flex-1 truncate font-mono text-sm">
+                  {webhookSecret}
+                </code>
+                <CopyButton text={webhookSecret} />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Used to verify the X-Formbase-Signature header on each request
+              </p>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <Label>Recent deliveries</Label>
+            {deliveries && deliveries.length > 0 ? (
+              <div className="divide-y rounded-md border">
+                {deliveries.map((delivery) => (
+                  <div
+                    key={delivery.id}
+                    className="flex items-center justify-between gap-2 px-3 py-2 text-sm"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant={
+                          delivery.status === 'success'
+                            ? 'secondary'
+                            : delivery.status === 'failed'
+                              ? 'destructive'
+                              : 'outline'
+                        }
+                      >
+                        {delivery.status}
+                      </Badge>
+                      {delivery.statusCode !== null && (
+                        <span className="text-muted-foreground">
+                          HTTP {delivery.statusCode}
+                        </span>
+                      )}
+                      <span className="text-muted-foreground">
+                        {delivery.attempts} attempt
+                        {delivery.attempts === 1 ? '' : 's'}
+                      </span>
+                    </div>
+                    <span className="text-muted-foreground">
+                      {formatDistanceToNow(delivery.createdAt, {
+                        addSuffix: true,
+                      })}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No deliveries yet</p>
+            )}
+          </div>
+        </>
+      )}
+    </div>
   );
 };

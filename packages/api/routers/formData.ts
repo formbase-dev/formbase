@@ -120,11 +120,13 @@ export const formDataRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const [formdata] = await ctx.db.batch([
+      const id = generateId(15);
+
+      await ctx.db.batch([
         ctx.db.insert(formDatas).values({
           data: serializeJson(input.data),
           formId: input.formId,
-          id: generateId(15),
+          id,
           createdAt: new Date(),
           isSpam: input.isSpam,
           spamReason: input.spamReason ?? null,
@@ -138,7 +140,7 @@ export const formDataRouter = createTRPCRouter({
           .where(eq(forms.id, input.formId)),
       ]);
 
-      return formdata;
+      return { id };
     }),
 
   markAsSpam: protectedProcedure
