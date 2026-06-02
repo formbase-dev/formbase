@@ -646,6 +646,7 @@ const WebhookSettings = ({
   });
 
   const watchEnableWebhook = webhookForm.watch('enableWebhook');
+  const watchWebhookUrl = webhookForm.watch('webhookUrl');
 
   const { mutateAsync: updateWebhookSettings, isPending: isUpdating } =
     api.form.update.useMutation();
@@ -693,6 +694,10 @@ const WebhookSettings = ({
         icon: <Webhook className="h-4 w-4" />,
       });
 
+      webhookForm.reset({
+        enableWebhook: webhookForm.getValues('enableWebhook'),
+        webhookUrl: data.webhookUrl ?? '',
+      });
       router.refresh();
     } catch {
       toast('Failed to update webhook URL', {
@@ -773,7 +778,7 @@ const WebhookSettings = ({
                           type="button"
                           variant="outline"
                           onClick={handleTestWebhook}
-                          disabled={!webhookUrl}
+                          disabled={!watchWebhookUrl || webhookForm.formState.isDirty}
                         >
                           Test
                         </LoadingButton>

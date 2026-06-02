@@ -30,10 +30,15 @@ export async function handleWebhookBatch(
 ): Promise<void> {
   if (batch.queue.endsWith('-dlq')) {
     for (const msg of batch.messages) {
-      await markFailed(db, msg.body.deliveryLogId, {
-        error: 'Exhausted retries (moved to DLQ)',
-      });
-      msg.ack();
+      try {
+        await markFailed(db, msg.body.deliveryLogId, {
+          error: 'Exhausted retries (moved to DLQ)',
+        });
+      } catch (error) {
+        console.error('Failed to mark webhook delivery as failed', error);
+      } finally {
+        msg.ack();
+      }
     }
     return;
   }
