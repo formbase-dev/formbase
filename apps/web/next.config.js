@@ -1,10 +1,22 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare';
 
 initOpenNextCloudflareForDev();
 
+const monorepoRoot = path.join(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '../..',
+);
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  outputFileTracingRoot: monorepoRoot,
+  turbopack: {
+    root: monorepoRoot,
+  },
   images: {
     remotePatterns: [
       {
