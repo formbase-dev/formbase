@@ -794,7 +794,7 @@ const WebhookSettings = ({
           </Form>
 
           {webhookSecret && (
-            <div className="space-y-0.5">
+            <div className="space-y-2">
               <Label>Signing secret</Label>
               <div className="flex items-center gap-2 rounded-md border bg-muted px-3 py-2">
                 <code className="flex-1 truncate font-mono text-sm">
