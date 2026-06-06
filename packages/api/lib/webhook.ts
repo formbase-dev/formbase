@@ -9,7 +9,7 @@ import { parseJsonObject } from '../utils/json';
 
 type Database = typeof database;
 
-const { and, eq, isNull, lt, or, sql } = drizzlePrimitives;
+const { and, eq, inArray, isNull, lt, or, sql } = drizzlePrimitives;
 
 export const SUBMISSION_CREATED = 'submission.created';
 
@@ -34,7 +34,9 @@ export interface WebhookQueueMessage {
 
 export interface WebhookQueue {
   send(message: WebhookQueueMessage): Promise<unknown>;
-  sendBatch(messages: Array<{ body: WebhookQueueMessage }>): Promise<unknown>;
+  sendBatch(
+    messages: Iterable<{ body: WebhookQueueMessage }>,
+  ): Promise<unknown>;
 }
 
 function truncate(value: string | undefined): string | null {
@@ -210,26 +212,42 @@ export async function markFailed(
 
 export async function findStuckDeliveries(
   db: Database,
-  { olderThanMs, leaseMs }: { olderThanMs: number; leaseMs: number },
+  {
+    olderThanMs,
+    leaseMs,
+    limit = 100,
+  }: { olderThanMs: number; leaseMs: number; limit?: number },
 ): Promise<Array<{ id: string; webhookUrl: string }>> {
   const now = new Date();
   const staleBefore = new Date(now.getTime() - leaseMs);
   const nextRetryAt = new Date(now.getTime() + leaseMs);
+  const eligibleDeliveries = and(
+    eq(webhookDeliveryLogs.status, 'pending'),
+    lt(webhookDeliveryLogs.attempts, 5),
+    or(
+      isNull(webhookDeliveryLogs.nextRetryAt),
+      lt(webhookDeliveryLogs.nextRetryAt, staleBefore),
+    ),
+    lt(webhookDeliveryLogs.createdAt, new Date(now.getTime() - olderThanMs)),
+  );
+  const candidates = await db
+    .select({ id: webhookDeliveryLogs.id })
+    .from(webhookDeliveryLogs)
+    .where(eligibleDeliveries)
+    .limit(Math.min(limit, 100));
+
+  if (!candidates.length) return [];
+
   return db
     .update(webhookDeliveryLogs)
     .set({ nextRetryAt })
     .where(
       and(
-        eq(webhookDeliveryLogs.status, 'pending'),
-        lt(webhookDeliveryLogs.attempts, 5),
-        or(
-          isNull(webhookDeliveryLogs.nextRetryAt),
-          lt(webhookDeliveryLogs.nextRetryAt, staleBefore),
+        inArray(
+          webhookDeliveryLogs.id,
+          candidates.map((candidate) => candidate.id),
         ),
-        lt(
-          webhookDeliveryLogs.createdAt,
-          new Date(now.getTime() - olderThanMs),
-        ),
+        eligibleDeliveries,
       ),
     )
     .returning({

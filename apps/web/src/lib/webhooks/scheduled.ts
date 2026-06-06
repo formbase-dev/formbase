@@ -1,15 +1,18 @@
 import type { WebhookQueue } from '@formbase/api/lib/webhook';
 
-import { db } from '@formbase/db';
 import {
   cleanupOldWebhookLogs,
   findStuckDeliveries,
 } from '@formbase/api/lib/webhook';
+import { db } from '@formbase/db';
+
+const SWEEP_BATCH_SIZE = 100;
 
 async function sweepStuckWebhooks(queue: WebhookQueue): Promise<void> {
   const stuck = await findStuckDeliveries(db, {
     olderThanMs: 120000,
     leaseMs: 900000,
+    limit: SWEEP_BATCH_SIZE,
   });
   if (stuck.length) {
     await queue.sendBatch(

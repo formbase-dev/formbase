@@ -1,20 +1,20 @@
-import { TRPCError } from "@trpc/server";
+import { TRPCError } from '@trpc/server';
+import { z } from 'zod';
 
-import { drizzlePrimitives } from "@formbase/db";
-import { formDatas, forms, onboardingForms } from "@formbase/db/schema";
-import { generateId } from "@formbase/utils/generate-id";
-import { isValidWebhookUrl } from "@formbase/utils/webhook";
-import { z } from "zod";
+import { drizzlePrimitives } from '@formbase/db';
+import { formDatas, forms, onboardingForms } from '@formbase/db/schema';
+import { generateId } from '@formbase/utils/generate-id';
+import { isValidWebhookUrl } from '@formbase/utils/webhook';
 
 import {
   buildMockPayload,
   buildWebhookPayload,
   createDeliveryLogRow,
   listWebhookDeliveries,
-} from "../lib/webhook";
-import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
-import { parseJsonArray, serializeJson } from "../utils/json";
-import { assertFormOwnership } from "./form-ownership";
+} from '../lib/webhook';
+import { createTRPCRouter, protectedProcedure, publicProcedure } from '../trpc';
+import { parseJsonArray, serializeJson } from '../utils/json';
+import { assertFormOwnership } from './form-ownership';
 
 const { and, count, eq } = drizzlePrimitives;
 
@@ -142,7 +142,7 @@ export const formRouter = createTRPCRouter({
           .url()
           .refine(isValidWebhookUrl, {
             message:
-              "Webhook URL must use HTTPS (localhost allowed only in development)",
+              'Webhook URL must use HTTPS (localhost allowed only in development)',
           })
           .optional()
           .nullable(),
@@ -154,7 +154,7 @@ export const formRouter = createTRPCRouter({
       const enablingWebhook =
         input.enableWebhook === true && !form.webhookSecret;
       const webhookSecret = enablingWebhook
-        ? (crypto.randomUUID() + crypto.randomUUID()).replace(/-/g, "")
+        ? (crypto.randomUUID() + crypto.randomUUID()).replace(/-/g, '')
         : undefined;
 
       await ctx.db
@@ -288,8 +288,6 @@ export const formRouter = createTRPCRouter({
           enableRetention: true,
           defaultSubmissionEmail: true,
           honeypotField: true,
-          enableWebhook: true,
-          webhookUrl: true,
         },
       });
 
@@ -308,15 +306,15 @@ export const formRouter = createTRPCRouter({
 
       if (!form.enableWebhook || !form.webhookUrl) {
         throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Webhook is not enabled or URL is not configured",
+          code: 'BAD_REQUEST',
+          message: 'Webhook is not enabled or URL is not configured',
         });
       }
 
       if (!ctx.webhookQueue) {
         throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Webhook queue unavailable",
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Webhook queue unavailable',
         });
       }
 
@@ -336,7 +334,10 @@ export const formRouter = createTRPCRouter({
         payload,
       });
 
-      await ctx.webhookQueue.send({ deliveryLogId, webhookUrl: form.webhookUrl });
+      await ctx.webhookQueue.send({
+        deliveryLogId,
+        webhookUrl: form.webhookUrl,
+      });
 
       return { deliveryLogId };
     }),

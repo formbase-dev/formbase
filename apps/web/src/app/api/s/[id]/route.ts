@@ -1,4 +1,3 @@
-import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { after, userAgent } from 'next/server';
 
 import { type RouterOutputs } from '@formbase/api';
@@ -145,21 +144,22 @@ export async function POST(
 
     if (!spamResult.isSpam) {
       after(() =>
-        handleEmailNotifications(form, cleanedFormData).catch((error) => {
-          console.error('Failed to send submission notification email', error);
-        }),
+        handleEmailNotifications(form, cleanedFormData).catch(
+          (error: unknown) => {
+            console.error(
+              'Failed to send submission notification email',
+              error,
+            );
+          },
+        ),
       );
     }
 
-    if (!spamResult.isSpam && form.enableWebhook && form.webhookUrl) {
-      const { env } = getCloudflareContext();
-      const queue = env.WEBHOOK_QUEUE;
-      const webhookUrl = form.webhookUrl;
+    if (!spamResult.isSpam) {
       after(() =>
-        enqueueWebhook(queue, {
+        enqueueWebhook({
           formId,
           formDataId,
-          webhookUrl,
         }).catch((error: unknown) => {
           console.error('Failed to enqueue webhook', error);
         }),

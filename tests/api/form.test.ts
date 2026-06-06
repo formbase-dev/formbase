@@ -1,11 +1,12 @@
+import type { TestSession, TestUser } from '../helpers';
+
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import {
   createAuthenticatedCaller,
   createTestSession,
   createTestUser,
-  type TestSession,
-  type TestUser,
+  createUnauthenticatedCaller,
 } from '../helpers';
 
 describe('Form API', () => {
@@ -66,6 +67,24 @@ describe('Form API', () => {
       const form = await caller.form.get({ formId: created.id });
       expect(form?.title).toBe('Updated Title');
       expect(form?.description).toBe('New description');
+    });
+  });
+
+  describe('form.getFormById', () => {
+    it('does not expose webhook config through public lookup', async () => {
+      const created = await caller.form.create({ title: 'Webhook Form' });
+      await caller.form.update({
+        id: created.id,
+        enableWebhook: true,
+        webhookUrl: 'https://example.com/webhook',
+      });
+
+      const publicCaller = await createUnauthenticatedCaller();
+      const form = await publicCaller.form.getFormById({ formId: created.id });
+
+      expect(form).not.toBeNull();
+      expect(form).not.toHaveProperty('enableWebhook');
+      expect(form).not.toHaveProperty('webhookUrl');
     });
   });
 
