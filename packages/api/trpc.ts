@@ -5,7 +5,12 @@ import { ZodError } from 'zod';
 import { getSession } from '@formbase/auth/server';
 import { db } from '@formbase/db';
 
-export const createTRPCContext = async (opts: { headers: Headers }) => {
+import type { WebhookQueue } from './lib/webhook';
+
+export const createTRPCContext = async (opts: {
+  headers: Headers;
+  webhookQueue?: WebhookQueue;
+}) => {
   const session = await getSession();
   const user = session?.user ?? null;
 
@@ -13,6 +18,7 @@ export const createTRPCContext = async (opts: { headers: Headers }) => {
     db,
     session,
     user,
+    webhookQueue: opts.webhookQueue,
     ...opts,
   };
 };

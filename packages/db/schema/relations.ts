@@ -7,6 +7,7 @@ import { formDatas } from './form-data';
 import { forms } from './forms';
 import { sessions } from './sessions';
 import { users } from './users';
+import { webhookDeliveryLogs } from './webhook-delivery-logs';
 
 export const userRelations = relations(users, ({ many }) => ({
   forms: many(forms),
@@ -36,6 +37,7 @@ export const formRelations = relations(forms, ({ one, many }) => ({
     references: [users.id],
   }),
   formData: many(formDatas),
+  webhookDeliveryLogs: many(webhookDeliveryLogs),
 }));
 
 export const formDataRelations = relations(formDatas, ({ one }) => ({
@@ -44,3 +46,17 @@ export const formDataRelations = relations(formDatas, ({ one }) => ({
     references: [forms.id],
   }),
 }));
+
+export const webhookDeliveryLogRelations = relations(
+  webhookDeliveryLogs,
+  ({ one }) => ({
+    form: one(forms, {
+      fields: [webhookDeliveryLogs.formId],
+      references: [forms.id],
+    }),
+    formData: one(formDatas, {
+      fields: [webhookDeliveryLogs.formDataId],
+      references: [formDatas.id],
+    }),
+  }),
+);

@@ -7,6 +7,7 @@ import { renderNewSubmissionEmail } from '~/lib/email/templates/new-submission';
 import { checkForSpam, stripHoneypotField } from '~/lib/spam-detection';
 import { api } from '~/lib/trpc/server';
 import { assignFileOrImage, uploadFileFromBlob } from '~/lib/upload-file';
+import { enqueueWebhook } from '~/lib/webhooks/producer';
 
 type FormDataResult =
   | {
@@ -133,7 +134,7 @@ export async function POST(
     const formKeys = form.keys;
     const updatedKeys = [...new Set([...formKeys, ...formDataKeys])];
 
-    await api.formData.setFormData({
+    const { id: formDataId } = await api.formData.setFormData({
       data: cleanedFormData,
       formId,
       keys: updatedKeys,
@@ -143,8 +144,24 @@ export async function POST(
 
     if (!spamResult.isSpam) {
       after(() =>
-        handleEmailNotifications(form, cleanedFormData).catch((error) => {
-          console.error('Failed to send submission notification email', error);
+        handleEmailNotifications(form, cleanedFormData).catch(
+          (error: unknown) => {
+            console.error(
+              'Failed to send submission notification email',
+              error,
+            );
+          },
+        ),
+      );
+    }
+
+    if (!spamResult.isSpam) {
+      after(() =>
+        enqueueWebhook({
+          formId,
+          formDataId,
+        }).catch((error: unknown) => {
+          console.error('Failed to enqueue webhook', error);
         }),
       );
     }

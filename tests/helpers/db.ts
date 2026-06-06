@@ -1,5 +1,8 @@
-import { createClient, type Client } from '@libsql/client';
-import { drizzle, type LibSQLDatabase } from 'drizzle-orm/libsql';
+import type { Client } from '@libsql/client';
+import type { LibSQLDatabase } from 'drizzle-orm/libsql';
+
+import { createClient } from '@libsql/client';
+import { drizzle } from 'drizzle-orm/libsql';
 
 import * as schema from '@formbase/db/schema';
 
@@ -60,6 +63,9 @@ CREATE TABLE IF NOT EXISTS forms (
   enable_retention INTEGER DEFAULT 1 NOT NULL,
   default_submission_email TEXT,
   honeypot_field TEXT DEFAULT '_gotcha' NOT NULL,
+  enable_webhook INTEGER DEFAULT false NOT NULL,
+  webhook_url TEXT,
+  webhook_secret TEXT,
   FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE
 );
 
@@ -72,6 +78,24 @@ CREATE TABLE IF NOT EXISTS form_datas (
   spam_reason TEXT,
   manual_override INTEGER DEFAULT 0 NOT NULL,
   FOREIGN KEY (form_id) REFERENCES forms(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS webhook_delivery_logs (
+  id TEXT PRIMARY KEY NOT NULL,
+  form_id TEXT NOT NULL,
+  form_data_id TEXT,
+  webhook_url TEXT NOT NULL,
+  payload TEXT NOT NULL,
+  status TEXT DEFAULT 'pending' NOT NULL,
+  status_code INTEGER,
+  response_body TEXT,
+  error_message TEXT,
+  attempts INTEGER DEFAULT 0 NOT NULL,
+  next_retry_at INTEGER,
+  created_at INTEGER DEFAULT (cast(unixepoch('subsec') * 1000 as integer)) NOT NULL,
+  completed_at INTEGER,
+  FOREIGN KEY (form_id) REFERENCES forms(id) ON DELETE CASCADE,
+  FOREIGN KEY (form_data_id) REFERENCES form_datas(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS onboarding_forms (
@@ -111,6 +135,9 @@ CREATE INDEX IF NOT EXISTS form_user_idx ON forms(user_id);
 CREATE INDEX IF NOT EXISTS form_created_at_idx ON forms(created_at);
 CREATE INDEX IF NOT EXISTS form_idx ON form_datas(form_id);
 CREATE INDEX IF NOT EXISTS form_data_created_at_idx ON form_datas(created_at);
+CREATE INDEX IF NOT EXISTS webhook_log_form_idx ON webhook_delivery_logs(form_id);
+CREATE INDEX IF NOT EXISTS webhook_log_status_idx ON webhook_delivery_logs(status);
+CREATE INDEX IF NOT EXISTS webhook_log_next_retry_idx ON webhook_delivery_logs(next_retry_at);
 CREATE INDEX IF NOT EXISTS verification_identifier_idx ON verification(identifier);
 CREATE INDEX IF NOT EXISTS api_key_user_idx ON api_keys(user_id);
 CREATE INDEX IF NOT EXISTS api_key_hash_idx ON api_keys(key_hash);
@@ -118,6 +145,7 @@ CREATE INDEX IF NOT EXISTS api_key_hash_idx ON api_keys(key_hash);
 
 const RESET_SQL = `
 DELETE FROM api_keys;
+DELETE FROM webhook_delivery_logs;
 DELETE FROM form_datas;
 DELETE FROM onboarding_forms;
 DELETE FROM forms;

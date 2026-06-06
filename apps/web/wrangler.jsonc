@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "formbase-web",
-  "main": ".open-next/worker.js",
+  "main": "./worker.ts",
   "workers_dev": true,
   "preview_urls": false,
   "compatibility_date": "2026-05-01",
@@ -27,5 +27,33 @@
   },
   "observability": {
     "enabled": true,
+  },
+  "queues": {
+    "producers": [
+      {
+        "queue": "formbase-webhooks",
+        "binding": "WEBHOOK_QUEUE",
+      },
+    ],
+    "consumers": [
+      {
+        "queue": "formbase-webhooks",
+        "max_batch_size": 10,
+        "max_batch_timeout": 5,
+        "max_retries": 5,
+        "max_concurrency": 5,
+        "dead_letter_queue": "formbase-webhooks-dlq",
+        "retry_delay": 60,
+      },
+      {
+        "queue": "formbase-webhooks-dlq",
+        "max_batch_size": 10,
+        "max_batch_timeout": 30,
+        "max_retries": 1,
+      },
+    ],
+  },
+  "triggers": {
+    "crons": ["*/5 * * * *", "0 3 * * *"],
   },
 }

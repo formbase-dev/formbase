@@ -8,7 +8,8 @@
     "./server": "./server.ts",
     "./flatten-object": "./flatten-object.ts",
     "./generate-id": "./generate-id.ts",
-    "./url": "./url.ts"
+    "./url": "./url.ts",
+    "./webhook": "./webhook.ts"
   },
   "scripts": {
     "lint": "eslint . --cache --max-warnings 0",

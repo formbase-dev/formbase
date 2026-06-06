@@ -2,12 +2,15 @@ import { type NextRequest } from 'next/server';
 
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
 
+import { getCloudflareContext } from '@opennextjs/cloudflare';
+
 import { appRouter, createTRPCContext } from '@formbase/api';
 import { env } from '@formbase/env';
 
 const createContext = async (req: NextRequest) => {
   return createTRPCContext({
     headers: req.headers,
+    webhookQueue: getCloudflareContext().env.WEBHOOK_QUEUE,
   });
 };
 

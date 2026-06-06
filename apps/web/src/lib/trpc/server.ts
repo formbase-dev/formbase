@@ -3,6 +3,8 @@ import 'server-only';
 import { cache } from 'react';
 import { headers } from 'next/headers';
 
+import { getCloudflareContext } from '@opennextjs/cloudflare';
+
 import { createCaller, createTRPCContext } from '@formbase/api';
 
 const createContext = cache(async () => {
@@ -11,6 +13,7 @@ const createContext = cache(async () => {
 
   return createTRPCContext({
     headers: heads,
+    webhookQueue: getCloudflareContext().env.WEBHOOK_QUEUE,
   });
 });
 
