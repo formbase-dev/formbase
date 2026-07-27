@@ -13,7 +13,7 @@
     "@formbase/env": "workspace:*",
     "@formbase/utils": "workspace:*",
     "better-auth": "^1.2.0",
-    "next": "16.2.4",
+    "next": "16.2.11",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "zod": "^3.23.8"
