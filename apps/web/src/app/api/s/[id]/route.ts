@@ -143,7 +143,7 @@ export async function POST(
 
     if (!spamResult.isSpam) {
       after(() =>
-        handleEmailNotifications(form, cleanedFormData).catch((error) => {
+        handleEmailNotifications(form, cleanedFormData).catch((error: unknown) => {
           console.error('Failed to send submission notification email', error);
         }),
       );
