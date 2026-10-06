@@ -1,5 +1,6 @@
 import { drizzlePrimitives } from "@formbase/db";
 import { formDatas, forms, onboardingForms } from "@formbase/db/schema";
+import { recipientEmailSchema } from "@formbase/email/recipient";
 import { generateId } from "@formbase/utils/generate-id";
 import { z } from "zod";
 
@@ -125,7 +126,7 @@ export const formRouter = createTRPCRouter({
         enableSubmissions: z.boolean().optional(),
         enableEmailNotifications: z.boolean().optional(),
         returnUrl: z.string().optional(),
-        defaultSubmissionEmail: z.string().optional(),
+        defaultSubmissionEmail: recipientEmailSchema.optional(),
         honeypotField: z.string().optional(),
       }),
     )

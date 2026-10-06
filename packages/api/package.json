@@ -10,6 +10,7 @@
   "dependencies": {
     "@formbase/auth": "workspace:*",
     "@formbase/db": "workspace:*",
+    "@formbase/email": "workspace:*",
     "@formbase/env": "workspace:*",
     "@formbase/utils": "workspace:*",
     "@trpc/server": "^11.17.0",

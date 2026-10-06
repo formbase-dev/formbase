@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./index.ts"
+    ".": "./index.ts",
+    "./recipient": "./recipient.ts"
   },
   "scripts": {
     "lint": "eslint . --cache --max-warnings 0",
@@ -12,12 +13,12 @@
   },
   "dependencies": {
     "@formbase/env": "workspace:*",
-    "nodemailer": "^6.9.13"
+    "nodemailer": "^10.0.15",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@formbase/tsconfig": "workspace:*",
     "@types/node": "^20.19.39",
-    "@types/nodemailer": "^6.4.23",
     "eslint-config-formbase": "workspace:*"
   }
 }

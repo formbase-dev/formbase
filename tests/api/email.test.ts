@@ -2,6 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { sendMail } from '../../packages/email/index';
 
+vi.mock('nodemailer', () => {
+  throw new Error('Cloudflare transport must not import Nodemailer');
+});
+
 const accountId = '8e642ff58d22bbbe4eda926dda88649e';
 const apiToken = 'test-cloudflare-token';
 const emailFrom = 'Formbase <noreply@mail.example.com>';
@@ -19,7 +23,7 @@ afterEach(() => {
 });
 
 describe('Cloudflare email transport', () => {
-  it('sends email through the Cloudflare REST API', async () => {
+  it('sends email through the Cloudflare REST API without importing Nodemailer', async () => {
     const apiResponse = {
       success: true,
       errors: [],
@@ -61,6 +65,25 @@ describe('Cloudflare email transport', () => {
       subject: 'Welcome',
       html: '<p>Hello</p>',
     });
+  });
+
+  it.each([
+    ['empty address', ''],
+    ['invalid address', 'not-an-email'],
+    ['display name', 'Name <user@example.com>'],
+    ['recipient list', 'user@example.com,other@example.com'],
+    ['header injection', 'user@example.com\r\nBcc: other@example.com'],
+    ['oversized nested comments', `${'('.repeat(4096)}user@example.com`],
+    ['255-character address', `${'a'.repeat(243)}@example.com`],
+  ])('rejects a %s before calling Cloudflare', async (_, to) => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(
+      sendMail({ to, subject: 'Test', body: '<p>Test</p>' }),
+    ).rejects.toThrow();
+
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('throws the Cloudflare API error message', async () => {
