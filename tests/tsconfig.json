@@ -4,6 +4,7 @@
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "jsx": "preserve",
     "esModuleInterop": true,
     "strict": true,
     "skipLibCheck": true,
@@ -18,6 +19,7 @@
       "@formbase/auth": ["../packages/auth"],
       "@formbase/auth/*": ["../packages/auth/*"],
       "@formbase/env": ["../packages/env"],
+      "nodemailer": ["../packages/email/node_modules/nodemailer"],
       "@formbase/utils": ["../packages/utils"],
       "@formbase/utils/*": ["../packages/utils/*"],
       "~/*": ["../apps/web/src/*"]

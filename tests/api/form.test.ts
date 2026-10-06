@@ -1,11 +1,11 @@
+import type { TestSession, TestUser } from '../helpers';
+
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import {
   createAuthenticatedCaller,
   createTestSession,
   createTestUser,
-  type TestSession,
-  type TestUser,
 } from '../helpers';
 
 describe('Form API', () => {
@@ -66,6 +66,76 @@ describe('Form API', () => {
       const form = await caller.form.get({ formId: created.id });
       expect(form?.title).toBe('Updated Title');
       expect(form?.description).toBe('New description');
+    });
+
+    it('updates the notification recipient with a valid single address', async () => {
+      const created = await caller.form.create({ title: 'Notifications' });
+
+      await caller.form.update({
+        id: created.id,
+        defaultSubmissionEmail: 'notifications+contact@example.com',
+      });
+
+      const form = await caller.form.get({ formId: created.id });
+      expect(form?.defaultSubmissionEmail).toBe(
+        'notifications+contact@example.com',
+      );
+    });
+
+    it('preserves the notification recipient when it is omitted', async () => {
+      const created = await caller.form.create({ title: 'Notifications' });
+      await caller.form.update({
+        id: created.id,
+        defaultSubmissionEmail: 'notifications@example.com',
+      });
+
+      await caller.form.update({ id: created.id, title: 'Renamed form' });
+
+      const form = await caller.form.get({ formId: created.id });
+      expect(form?.title).toBe('Renamed form');
+      expect(form?.defaultSubmissionEmail).toBe('notifications@example.com');
+    });
+
+    it('accepts a notification recipient at the 254-character limit', async () => {
+      const created = await caller.form.create({ title: 'Notifications' });
+      const recipient = `${'a'.repeat(64)}@${'b'.repeat(63)}.${'c'.repeat(63)}.${'d'.repeat(61)}`;
+      expect(recipient).toHaveLength(254);
+
+      await caller.form.update({
+        id: created.id,
+        defaultSubmissionEmail: recipient,
+      });
+
+      const form = await caller.form.get({ formId: created.id });
+      expect(form?.defaultSubmissionEmail).toBe(recipient);
+    });
+
+    it.each([
+      ['empty address', ''],
+      ['invalid address', 'not-an-email'],
+      ['display name', 'Notifications <notifications@example.com>'],
+      ['recipient list', 'first@example.com,second@example.com'],
+      ['line feed', 'notifications@example.com\n'],
+      ['carriage return', 'notifications@example.com\r'],
+      ['null byte', 'notifications\0@example.com'],
+      [
+        '255-character address',
+        `${'a'.repeat(64)}@${'b'.repeat(63)}.${'c'.repeat(63)}.${'d'.repeat(62)}`,
+      ],
+    ])('rejects a %s without changing the form', async (_, recipient) => {
+      const created = await caller.form.create({ title: 'Original title' });
+      const before = await caller.form.get({ formId: created.id });
+
+      await expect(
+        caller.form.update({
+          id: created.id,
+          title: 'Should not be saved',
+          defaultSubmissionEmail: recipient,
+        }),
+      ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
+
+      const after = await caller.form.get({ formId: created.id });
+      expect(after).toEqual(before);
     });
   });
 

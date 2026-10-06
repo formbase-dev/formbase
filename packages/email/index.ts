@@ -1,6 +1,6 @@
-import type { TransportOptions } from 'nodemailer';
-
 import { env } from '@formbase/env';
+
+import { recipientEmailSchema } from './recipient';
 
 export type MessageInfo = {
   to: string;
@@ -43,7 +43,7 @@ const createSmtpTransport = async (): Promise<MailTransporter> => {
   // Dynamic import keeps Node-only nodemailer out of Cloudflare email transport bundles.
   const { createTransport } = await import('nodemailer');
 
-  return createTransport(smtpConfig as TransportOptions);
+  return createTransport(smtpConfig);
 };
 
 let cachedTransporter: MailTransporter | null = null;
@@ -139,6 +139,8 @@ export const sendMail = async ({
   subject,
   body,
 }: MessageInfo): Promise<unknown> => {
+  recipientEmailSchema.parse(to);
+
   if (env.SMTP_TRANSPORT === 'cloudflare') {
     return sendCloudflareMail({ to, subject, body });
   }
